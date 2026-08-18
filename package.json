@@ -1,0 +1,30 @@
+{
+  "name": "com.deucarian.viewer-authentication",
+  "version": "0.1.0",
+  "displayName": "Deucarian Viewer Authentication",
+  "description": "Reusable viewer authentication session composition, sanitized token lifecycle commands, and local-only editor tooling.",
+  "unity": "2021.3",
+  "license": "MIT",
+  "author": {
+    "name": "Deucarian"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Deucarian/Viewer-Authentication.git"
+  },
+  "keywords": [
+    "deucarian",
+    "viewer",
+    "authentication",
+    "session",
+    "token"
+  ],
+  "dependencies": {
+    "com.deucarian.api": "1.1.4",
+    "com.deucarian.command-routing": "0.1.1",
+    "com.deucarian.editor": "1.0.5",
+    "com.deucarian.session": "1.0.6",
+    "com.deucarian.session.api-integration": "1.0.6",
+    "com.unity.nuget.newtonsoft-json": "3.2.2"
+  }
+}

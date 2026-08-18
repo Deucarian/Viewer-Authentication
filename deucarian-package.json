@@ -1,0 +1,31 @@
+{
+  "packageId": "com.deucarian.viewer-authentication",
+  "displayName": "Deucarian Viewer Authentication",
+  "samplePolicy": "tool",
+  "operationalPackage": false,
+  "ownedCapabilities": [
+    "viewer-authentication"
+  ],
+  "runtimeAssemblies": [
+    "Deucarian.ViewerAuthentication"
+  ],
+  "editorAssemblies": [
+    "Deucarian.ViewerAuthentication.Editor"
+  ],
+  "sampleAssemblies": [],
+  "testAssemblies": [
+    "Deucarian.ViewerAuthentication.Tests.EditMode"
+  ],
+  "requiredDependencies": [
+    "com.deucarian.api",
+    "com.deucarian.command-routing",
+    "com.deucarian.editor",
+    "com.deucarian.session",
+    "com.deucarian.session.api-integration",
+    "com.unity.nuget.newtonsoft-json"
+  ],
+  "optionalVersionDefinedDependencies": [],
+  "allowedDirectDebugCalls": [],
+  "allowedDirectUnityObjectLifetimeCalls": [],
+  "expectedSamplesRoot": ""
+}

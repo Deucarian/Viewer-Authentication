@@ -1,0 +1,20 @@
+{
+  "name": "Deucarian.ViewerAuthentication",
+  "rootNamespace": "Deucarian.ViewerAuthentication",
+  "references": [
+    "Deucarian.API",
+    "Deucarian.CommandRouting",
+    "Deucarian.Session",
+    "Deucarian.Session.APIIntegration",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
