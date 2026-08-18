@@ -5,7 +5,10 @@ using Deucarian.Session;
 namespace Deucarian.ViewerAuthentication
 {
     /// <summary>
-    /// Injected backend-specific development token acquisition workflow.
+    /// Injected application-specific development token acquisition workflow.
+    /// Existing non-interactive providers implement only this contract. A
+    /// provider that needs transient user input can additionally implement
+    /// <see cref="IInteractiveViewerAuthenticationAcquisitionProvider"/>.
     /// </summary>
     public interface IViewerAuthenticationAcquisitionProvider
     {
