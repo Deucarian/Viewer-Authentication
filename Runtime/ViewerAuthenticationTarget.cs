@@ -12,12 +12,14 @@ namespace Deucarian.ViewerAuthentication
             string id,
             string displayName,
             IViewerAuthenticationSession session,
-            IViewerAuthenticationAcquisitionProvider acquisitionProvider)
+            IViewerAuthenticationAcquisitionProvider acquisitionProvider,
+            IViewerAuthenticationValidationProvider validationProvider)
         {
             Id = id;
             DisplayName = displayName;
             Session = session ?? throw new ArgumentNullException(nameof(session));
             AcquisitionProvider = acquisitionProvider;
+            ValidationProvider = validationProvider;
         }
 
         /// <summary>Gets the stable target identifier.</summary>
@@ -31,6 +33,12 @@ namespace Deucarian.ViewerAuthentication
 
         /// <summary>Gets the optional backend-specific acquisition provider.</summary>
         public IViewerAuthenticationAcquisitionProvider AcquisitionProvider
+        {
+            get;
+        }
+
+        /// <summary>Gets the optional server-side validation provider.</summary>
+        public IViewerAuthenticationValidationProvider ValidationProvider
         {
             get;
         }

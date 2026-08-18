@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Deucarian.API;
 using Deucarian.API.Core;
 using Deucarian.Session;
 using Deucarian.Session.APIIntegration;
@@ -53,7 +54,7 @@ namespace Deucarian.ViewerAuthentication
         /// <inheritdoc />
         public string DisplayName
         {
-            get { return "Refresh Token"; }
+            get { return "Get New Token"; }
         }
 
         /// <inheritdoc />
@@ -61,6 +62,18 @@ namespace Deucarian.ViewerAuthentication
             InputDescriptors
         {
             get { return inputDescriptors; }
+        }
+
+        /// <summary>Gets the credential-free configured endpoint template.</summary>
+        public string EndpointTemplate
+        {
+            get { return config.EndpointTemplate; }
+        }
+
+        /// <summary>Gets the configured HTTP method.</summary>
+        public HttpMethod Method
+        {
+            get { return config.Method; }
         }
 
         /// <inheritdoc />

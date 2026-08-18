@@ -39,6 +39,25 @@ namespace Deucarian.ViewerAuthentication
             IViewerAuthenticationSession session,
             IViewerAuthenticationAcquisitionProvider provider = null)
         {
+            return Register(
+                id,
+                displayName,
+                session,
+                provider,
+                null);
+        }
+
+        /// <summary>
+        /// Registers a live viewer authentication target with optional token
+        /// acquisition and server-side validation providers.
+        /// </summary>
+        public static IDisposable Register(
+            string id,
+            string displayName,
+            IViewerAuthenticationSession session,
+            IViewerAuthenticationAcquisitionProvider provider,
+            IViewerAuthenticationValidationProvider validationProvider)
+        {
             string normalizedId = NormalizeRequired(id, nameof(id));
             string normalizedDisplayName = string.IsNullOrWhiteSpace(displayName)
                 ? normalizedId
@@ -47,7 +66,8 @@ namespace Deucarian.ViewerAuthentication
                 normalizedId,
                 normalizedDisplayName,
                 session,
-                provider);
+                provider,
+                validationProvider);
 
             lock (Gate)
             {
