@@ -15,12 +15,14 @@ namespace Deucarian.ViewerAuthentication.Tests
             ViewerAuthenticationSession session =
                 ViewerAuthenticationSession.CreateTransient();
             var acquisition = new StubAcquisitionProvider();
+            var validation = new StubValidationProvider();
             IDisposable registration =
                 ViewerAuthenticationTargetRegistry.Register(
                     id,
                     "Test Viewer",
                     session,
-                    acquisition);
+                    acquisition,
+                    validation);
 
             Assert.That(
                 ViewerAuthenticationTargetRegistry.TryGet(
@@ -30,6 +32,7 @@ namespace Deucarian.ViewerAuthentication.Tests
             Assert.That(target.DisplayName, Is.EqualTo("Test Viewer"));
             Assert.That(target.Session, Is.SameAs(session));
             Assert.That(target.AcquisitionProvider, Is.SameAs(acquisition));
+            Assert.That(target.ValidationProvider, Is.SameAs(validation));
 
             registration.Dispose();
             registration.Dispose();
@@ -127,6 +130,24 @@ namespace Deucarian.ViewerAuthentication.Tests
                     "acquired-token",
                     null,
                     cancellationToken);
+            }
+        }
+
+        private sealed class StubValidationProvider :
+            IViewerAuthenticationValidationProvider
+        {
+            public string DisplayName
+            {
+                get { return "Validate Test Token"; }
+            }
+
+            public Task<ViewerAuthenticationValidationResult> ValidateAsync(
+                ISessionService sessionService,
+                CancellationToken cancellationToken =
+                    default(CancellationToken))
+            {
+                return Task.FromResult(
+                    ViewerAuthenticationValidationResult.Verified());
             }
         }
     }
