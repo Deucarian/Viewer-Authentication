@@ -40,7 +40,7 @@ session always stores the normalized token.
 
 ## Configurable endpoint reacquisition
 
-Session API Integration 1.1.0 supplies a credential-free
+Session API Integration 1.1.1 supplies a credential-free
 `SessionTokenEndpointProfile`. It describes an endpoint, where transient input
 values belong in the request, and the JSON paths that contain the returned
 access token, optional refresh token, and expiry. The profile must never contain
@@ -99,12 +99,20 @@ Open:
 
 `Tools > Deucarian > Viewer > Authentication`
 
-The window lists explicitly registered targets and offers:
+In Edit Mode, the window creates an ephemeral, window-owned session directly
+from the conventional Resources profile. It is not registered as a live viewer
+and is discarded when the window closes. In Play Mode, the window uses the
+explicitly registered viewer session. A viewer selector is shown only when more
+than one real configuration is available.
+
+The window offers:
 
 - masked paste-and-replace input, cleared immediately after use;
-- one `Refresh Token` action and a separate clear action;
+- one `Get New Token` sign-in action and compact advanced token controls;
 - provider-defined masked or plain transient acquisition fields;
 - sanitized Missing, Active, Expiring, Expired, or Expiry Unknown state;
+- automatic local JWT expiry assessment on open and focus;
+- optional automatic server validation on open and focus;
 - opt-in local remembering, one-click apply, and auto-apply.
 
 Remembered tokens are stored only in the consuming project's ignored
@@ -112,11 +120,29 @@ Remembered tokens are stored only in the consuming project's ignored
 OS credential vault. Do not enable remembering on a machine whose local Unity
 settings are not appropriately protected.
 
-When a target has an acquisition provider, `Refresh Token` reacquires a token
-through that provider. This commonly means repeating a configured sign-in
-exchange; it does not claim that the backend implements a formal refresh-token
-protocol. Without an acquisition provider, the same button invokes the true
-Session refresh service when one was supplied.
+`Get New Token` reacquires a token through the configured provider. This
+commonly means repeating a sign-in exchange; it does not claim that the backend
+implements a formal refresh-token protocol.
+
+## Optional server validation
+
+Local JWT expiry metadata answers only whether the token's readable `exp` time
+has passed. It does not validate the signature or prove that the server still
+accepts the token. Opaque tokens have no locally verifiable expiry at all.
+
+For an authoritative acceptance check, add a second credential-free
+`SessionTokenEndpointProfile` at:
+
+`Assets/Resources/Deucarian/ViewerAuthenticationTokenValidationEndpointProfile.asset`
+
+Configure it for the backend's validation route, enable **Use Current Access
+Token As Bearer**, and map the successful response's access-token JSON path.
+The shared editor window discovers this profile and checks it automatically on
+open. Refocusing checks again only after the previous result is at least one
+minute old; `Check Now` remains available for an explicit retry. HTTP 401/403 is presented as rejected; transport, server, or
+mapping failures are presented as unable to check. Neither outcome deletes the
+remembered token. Projects with a non-endpoint validation mechanism can instead
+inject `IViewerAuthenticationValidationProvider` when registering a target.
 
 ## Acquisition providers
 

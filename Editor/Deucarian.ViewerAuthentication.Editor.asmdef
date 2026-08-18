@@ -2,6 +2,7 @@
   "name": "Deucarian.ViewerAuthentication.Editor",
   "rootNamespace": "Deucarian.ViewerAuthentication.Editor",
   "references": [
+    "Deucarian.API",
     "Deucarian.Editor",
     "Deucarian.Session",
     "Deucarian.ViewerAuthentication"
