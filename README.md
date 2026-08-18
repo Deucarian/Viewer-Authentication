@@ -113,6 +113,8 @@ The window offers:
 - sanitized Missing, Active, Expiring, Expired, or Expiry Unknown state;
 - automatic local JWT expiry assessment on open and focus;
 - optional automatic server validation on open and focus;
+- a prominent backend-target card with the exact active origin, sign-in URL,
+  and validation URL, plus a warning when those origins differ;
 - opt-in local remembering, one-click apply, and auto-apply.
 
 Remembered tokens are stored only in the consuming project's ignored

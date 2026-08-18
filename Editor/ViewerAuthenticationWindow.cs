@@ -174,6 +174,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             }
 
             ViewerAuthenticationTarget target = targets[selectedIndex];
+            DrawBackendTargetCard(target);
             DrawStatusCard(target);
             DrawAcquisitionCard(target);
             DrawManualToolsCard(target);
@@ -288,20 +289,6 @@ namespace Deucarian.ViewerAuthentication.Editor
                                 validationProvider,
                                 validation,
                                 checking)));
-                    if (validationProvider is
-                        ViewerAuthenticationEndpointValidationProvider
-                            endpointValidation)
-                    {
-                        DeucarianEditorFieldRow.Draw(
-                            "Validation endpoint",
-                            () => EditorGUILayout.SelectableLabel(
-                                endpointValidation.Method + "  " +
-                                endpointValidation.EndpointTemplate,
-                                EditorStyles.label,
-                                GUILayout.Height(
-                                    EditorGUIUtility.singleLineHeight)));
-                    }
-
                     if (hasAssessment)
                     {
                         DeucarianEditorFieldRow.Draw(
@@ -319,6 +306,99 @@ namespace Deucarian.ViewerAuthentication.Editor
                         checking);
                 },
                 "Expiry metadata is checked locally; a configured validation endpoint verifies server acceptance.");
+        }
+
+        private void DrawBackendTargetCard(ViewerAuthenticationTarget target)
+        {
+            ViewerAuthenticationEndpointProvider acquisition =
+                ResolveAcquisitionProvider(target) as
+                    ViewerAuthenticationEndpointProvider;
+            ViewerAuthenticationEndpointValidationProvider validation =
+                ResolveValidationProvider(target) as
+                    ViewerAuthenticationEndpointValidationProvider;
+            ViewerAuthenticationEndpointTargetSummary summary =
+                ViewerAuthenticationEndpointTargetSummary.Create(
+                    acquisition?.Method.ToString(),
+                    acquisition?.EndpointTemplate,
+                    validation?.Method.ToString(),
+                    validation?.EndpointTemplate);
+            if (!summary.HasAnyEndpoint)
+            {
+                return;
+            }
+
+            DeucarianEditorCards.DrawCard(
+                "Backend target",
+                () =>
+                {
+                    if (summary.HasDifferentOrigins)
+                    {
+                        DrawEndpointValue(
+                            "Sign-in server",
+                            summary.SignIn.Origin);
+                        DrawEndpointValue(
+                            "Token-check server",
+                            summary.TokenCheck.Origin);
+                        EditorGUILayout.HelpBox(
+                            "Sign-in and token-check endpoints target " +
+                            "different backend origins. Verify that this " +
+                            "is intentional.",
+                            MessageType.Warning);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(
+                                 summary.SharedOrigin))
+                    {
+                        DrawEndpointValue(
+                            "Current server",
+                            summary.SharedOrigin);
+                    }
+                    else
+                    {
+                        DrawEndpointValue(
+                            "Current server",
+                            "Resolved at request time; the endpoint " +
+                            "templates do not expose one common HTTP origin.");
+                    }
+
+                    if (summary.SignIn != null)
+                    {
+                        DrawEndpointValue(
+                            "Sign in",
+                            summary.SignIn.DisplayValue);
+                    }
+
+                    if (summary.TokenCheck != null)
+                    {
+                        DrawEndpointValue(
+                            "Token check",
+                            summary.TokenCheck.DisplayValue);
+                    }
+                },
+                "Configured by this project's endpoint profiles. " +
+                "Environment switching is not enabled yet.");
+        }
+
+        private void DrawEndpointValue(string label, string value)
+        {
+            GUILayout.Space(DeucarianEditorSpacing.Tiny);
+            EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+            var style = new GUIStyle(EditorStyles.textArea)
+            {
+                wordWrap = true
+            };
+            float availableWidth = Math.Max(
+                80f,
+                EditorGUIUtility.currentViewWidth - 90f);
+            float height = Math.Max(
+                EditorGUIUtility.singleLineHeight + 5f,
+                style.CalcHeight(
+                    new GUIContent(value),
+                    availableWidth));
+            EditorGUILayout.SelectableLabel(
+                value,
+                style,
+                GUILayout.Height(height),
+                GUILayout.ExpandWidth(true));
         }
 
         private void DrawAcquisitionCard(ViewerAuthenticationTarget target)
@@ -343,9 +423,6 @@ namespace Deucarian.ViewerAuthentication.Editor
                         return;
                     }
 
-                    DrawEndpointSummary(
-                        "Sign-in endpoint",
-                        provider as ViewerAuthenticationEndpointProvider);
                     if (interactiveProvider != null)
                     {
                         DrawInteractiveInputs(descriptors);
@@ -375,24 +452,6 @@ namespace Deucarian.ViewerAuthentication.Editor
                         MessageType.None);
                 },
                 "Use the project's credential-free endpoint profile in both Edit Mode and Play Mode.");
-        }
-
-        private void DrawEndpointSummary(
-            string label,
-            ViewerAuthenticationEndpointProvider provider)
-        {
-            if (provider == null)
-            {
-                return;
-            }
-
-            DeucarianEditorCards.DrawInlineCard(
-                () => DeucarianEditorFieldRow.Draw(
-                    label,
-                    () => EditorGUILayout.SelectableLabel(
-                        provider.Method + "  " + provider.EndpointTemplate,
-                        EditorStyles.label,
-                        GUILayout.Height(EditorGUIUtility.singleLineHeight))));
         }
 
         private void DrawInteractiveInputs(
@@ -661,8 +720,18 @@ namespace Deucarian.ViewerAuthentication.Editor
             GUILayout.Space(DeucarianEditorSpacing.Tiny);
             DeucarianEditorChrome.DrawFooterVersion(
                 "com.deucarian.viewer-authentication",
-                "0.3.0");
+                ResolvePackageVersion());
             GUILayout.Space(DeucarianEditorSpacing.Small);
+        }
+
+        private static string ResolvePackageVersion()
+        {
+            UnityEditor.PackageManager.PackageInfo package =
+                UnityEditor.PackageManager.PackageInfo.FindForAssembly(
+                    typeof(ViewerAuthenticationWindow).Assembly);
+            return string.IsNullOrWhiteSpace(package?.version)
+                ? "development"
+                : package.version;
         }
 
         private void PersistSelectedTargetIfNeeded(
