@@ -130,9 +130,18 @@ namespace Deucarian.ViewerAuthentication
                         ViewerAccessTokenInput.InvalidMessage));
             }
 
+            DateTimeOffset? effectiveExpiry = expiresAtUtc;
+            if (!effectiveExpiry.HasValue &&
+                SessionAccessTokenExpiryResolver.TryResolveJwtExpiry(
+                    normalized,
+                    out DateTimeOffset jwtExpiry))
+            {
+                effectiveExpiry = jwtExpiry;
+            }
+
             return SessionService.ReplaceAccessTokenAsync(
                 normalized,
-                expiresAtUtc,
+                effectiveExpiry,
                 cancellationToken);
         }
 
