@@ -5,7 +5,9 @@
     "Deucarian.API",
     "Deucarian.CommandRouting",
     "Deucarian.Session",
+    "Deucarian.Session.APIIntegration",
     "Deucarian.ViewerAuthentication",
+    "Deucarian.ViewerAuthentication.Editor",
     "Newtonsoft.Json"
   ],
   "includePlatforms": [

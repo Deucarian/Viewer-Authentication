@@ -93,6 +93,58 @@ namespace Deucarian.ViewerAuthentication.Editor
             Save(true);
         }
 
+        internal bool TryMigrateLegacyToken(
+            string targetId,
+            string accessToken)
+        {
+            string previousTargetId = selectedTargetId;
+            string previousToken = rememberedAccessToken;
+            bool previousRemember = rememberAccessToken;
+            bool previousAutoApply = autoApply;
+            bool migrated = false;
+            try
+            {
+                selectedTargetId = targetId;
+                rememberedAccessToken = accessToken;
+                rememberAccessToken = true;
+                autoApply = true;
+                Save(true);
+                migrated = rememberAccessToken &&
+                           autoApply &&
+                           string.Equals(
+                               selectedTargetId,
+                               targetId,
+                               System.StringComparison.Ordinal) &&
+                           string.Equals(
+                               rememberedAccessToken,
+                               accessToken,
+                               System.StringComparison.Ordinal);
+            }
+            catch
+            {
+                selectedTargetId = previousTargetId;
+                rememberedAccessToken = previousToken;
+                rememberAccessToken = previousRemember;
+                autoApply = previousAutoApply;
+                try
+                {
+                    Save(true);
+                }
+                catch
+                {
+                    // The caller retains the legacy source when migration
+                    // cannot be confirmed. Never log credential state here.
+                }
+            }
+            finally
+            {
+                previousToken = null;
+                accessToken = null;
+            }
+
+            return migrated;
+        }
+
         internal void ClearRememberedToken()
         {
             rememberedAccessToken = string.Empty;

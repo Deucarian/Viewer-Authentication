@@ -24,6 +24,9 @@ namespace Deucarian.ViewerAuthentication.Editor
         private bool operationFailed;
         private bool operationInProgress;
         private CancellationTokenSource operationCancellation;
+        private readonly ViewerAuthenticationTransientInputState
+            interactiveInputs =
+                new ViewerAuthenticationTransientInputState();
 
         [MenuItem(MenuPath)]
         public static void Open()
@@ -37,19 +40,29 @@ namespace Deucarian.ViewerAuthentication.Editor
 
         private void OnEnable()
         {
-            ViewerAuthenticationTargetRegistry.TargetsChanged += Repaint;
+            ViewerAuthenticationTargetRegistry.TargetsChanged +=
+                OnTargetsChanged;
         }
 
         private void OnDisable()
         {
-            ViewerAuthenticationTargetRegistry.TargetsChanged -= Repaint;
+            ViewerAuthenticationTargetRegistry.TargetsChanged -=
+                OnTargetsChanged;
             replacementToken = string.Empty;
+            interactiveInputs.ClearAll();
             if (operationCancellation != null)
             {
                 operationCancellation.Cancel();
                 operationCancellation.Dispose();
                 operationCancellation = null;
             }
+        }
+
+        private void OnTargetsChanged()
+        {
+            replacementToken = string.Empty;
+            interactiveInputs.ClearAll();
+            Repaint();
         }
 
         private void OnGUI()
@@ -109,6 +122,7 @@ namespace Deucarian.ViewerAuthentication.Editor
                         selectedIndex = nextIndex;
                         ViewerAuthenticationLocalSettings.instance
                             .SetSelectedTarget(targets[selectedIndex].Id);
+                        interactiveInputs.ClearAll();
                         operationMessage = string.Empty;
                     }
                 });
@@ -140,8 +154,11 @@ namespace Deucarian.ViewerAuthentication.Editor
                             ? status.ExpiresAtUtc.Value.ToLocalTime().ToString("u")
                             : "Unknown");
                     EditorGUILayout.LabelField(
-                        "Refresh configured",
+                        "Automatic refresh",
                         status.CanRefresh ? "Yes" : "No");
+                    EditorGUILayout.LabelField(
+                        "Endpoint reacquisition",
+                        target.AcquisitionProvider != null ? "Yes" : "No");
                 },
                 "This snapshot never contains the access token.");
         }
@@ -192,22 +209,82 @@ namespace Deucarian.ViewerAuthentication.Editor
                     ViewerAuthenticationStatusSnapshot status =
                         target.Session.Status;
                     bool hasToken = status.HasAccessToken;
-                    bool canRefresh =
-                        !operationInProgress &&
+                    IViewerAuthenticationAcquisitionProvider provider =
+                        target.AcquisitionProvider;
+                    IInteractiveViewerAuthenticationAcquisitionProvider
+                        interactiveProvider = provider as
+                            IInteractiveViewerAuthenticationAcquisitionProvider;
+                    IReadOnlyList<ViewerAuthenticationInputDescriptor>
+                        descriptors = interactiveProvider?.InputDescriptors;
+
+                    if (interactiveProvider != null)
+                    {
+                        DrawInteractiveInputs(descriptors);
+                    }
+
+                    bool canReacquire =
+                        provider != null &&
+                        (interactiveProvider == null ||
+                         interactiveInputs.HasRequiredValues(descriptors));
+                    bool canRefreshSession =
+                        provider == null &&
                         hasToken &&
                         target.Session.CanRefresh;
-                    if (DeucarianEditorButtons.Secondary(
-                            "Refresh Access Token",
-                            canRefresh,
+                    bool canRunTokenAction =
+                        !operationInProgress &&
+                        (canReacquire || canRefreshSession);
+                    if (DeucarianEditorButtons.Primary(
+                            "Refresh Token",
+                            canRunTokenAction,
                             GUILayout.ExpandWidth(true)))
                     {
-                        RunOperation(
-                            target,
-                            target.Session.RefreshAsync,
-                            "Access token refreshed.",
-                            rememberOnSuccess: true,
-                            clearRememberedOnSuccess: false);
+                        if (interactiveProvider != null)
+                        {
+                            ViewerAuthenticationInputValues inputValues =
+                                interactiveInputs.CreateValues(descriptors);
+                            interactiveInputs.ClearSecrets(descriptors);
+                            GUI.FocusControl(null);
+                            RunOperation(
+                                target,
+                                cancellationToken =>
+                                    interactiveProvider.AcquireAsync(
+                                        target.Session.SessionService,
+                                        inputValues,
+                                        cancellationToken),
+                                "Token reacquired.",
+                                rememberOnSuccess: true,
+                                clearRememberedOnSuccess: false,
+                                sensitiveState: inputValues);
+                        }
+                        else if (provider != null)
+                        {
+                            RunOperation(
+                                target,
+                                cancellationToken => provider.AcquireAsync(
+                                    target.Session.SessionService,
+                                    cancellationToken),
+                                "Token reacquired.",
+                                rememberOnSuccess: true,
+                                clearRememberedOnSuccess: false);
+                        }
+                        else
+                        {
+                            RunOperation(
+                                target,
+                                target.Session.RefreshAsync,
+                                "Token refreshed.",
+                                rememberOnSuccess: true,
+                                clearRememberedOnSuccess: false);
+                        }
                     }
+
+                    EditorGUILayout.HelpBox(
+                        provider != null
+                            ? "Refresh Token reacquires authentication through the configured acquisition endpoint. It does not imply a formal refresh-token protocol."
+                            : target.Session.CanRefresh
+                                ? "Refresh Token uses the configured session refresh service."
+                                : "Refresh Token becomes available when the viewer registers an acquisition provider or session refresh service.",
+                        MessageType.None);
 
                     if (DeucarianEditorButtons.Secondary(
                             "Clear Session",
@@ -222,33 +299,42 @@ namespace Deucarian.ViewerAuthentication.Editor
                             clearRememberedOnSuccess: true);
                     }
 
-                    IViewerAuthenticationAcquisitionProvider provider =
-                        target.AcquisitionProvider;
-                    if (provider != null &&
-                        DeucarianEditorButtons.Primary(
-                            string.IsNullOrWhiteSpace(provider.DisplayName)
-                                ? "Get Access Token"
-                                : provider.DisplayName,
-                            !operationInProgress,
-                            GUILayout.ExpandWidth(true)))
-                    {
-                        RunOperation(
-                            target,
-                            cancellationToken => provider.AcquireAsync(
-                                target.Session.SessionService,
-                                cancellationToken),
-                            "Authentication acquired.",
-                            rememberOnSuccess: true,
-                            clearRememberedOnSuccess: false);
-                    }
-
-                    if (provider == null)
-                    {
-                        EditorGUILayout.HelpBox(
-                            "Get Token becomes available when the viewer registers a backend-specific acquisition provider.",
-                            MessageType.None);
-                    }
                 });
+        }
+
+        private void DrawInteractiveInputs(
+            IReadOnlyList<ViewerAuthenticationInputDescriptor> descriptors)
+        {
+            if (descriptors == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < descriptors.Count; i++)
+            {
+                ViewerAuthenticationInputDescriptor descriptor =
+                    descriptors[i];
+                if (descriptor == null)
+                {
+                    continue;
+                }
+
+                string current = interactiveInputs.GetValue(descriptor.Key);
+                string next = descriptor.IsSecret
+                    ? EditorGUILayout.PasswordField(
+                        descriptor.DisplayName,
+                        current)
+                    : EditorGUILayout.TextField(
+                        descriptor.DisplayName,
+                        current);
+                interactiveInputs.SetValue(descriptor.Key, next);
+                if (!string.IsNullOrWhiteSpace(descriptor.Description))
+                {
+                    EditorGUILayout.HelpBox(
+                        descriptor.Description,
+                        MessageType.None);
+                }
+            }
         }
 
         private void DrawLocalStorageCard(ViewerAuthenticationTarget target)
@@ -360,7 +446,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             GUILayout.Space(4f);
             DeucarianEditorChrome.DrawFooterVersion(
                 "com.deucarian.viewer-authentication",
-                "0.1.0");
+                "0.2.0");
             GUILayout.Space(8f);
         }
 
@@ -388,10 +474,12 @@ namespace Deucarian.ViewerAuthentication.Editor
             Func<CancellationToken, Task<SessionResult>> operation,
             string successMessage,
             bool rememberOnSuccess,
-            bool clearRememberedOnSuccess)
+            bool clearRememberedOnSuccess,
+            IDisposable sensitiveState = null)
         {
             if (operationInProgress)
             {
+                sensitiveState?.Dispose();
                 return;
             }
 
@@ -443,6 +531,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             }
             finally
             {
+                sensitiveState?.Dispose();
                 operationInProgress = false;
                 if (operationCancellation != null)
                 {
