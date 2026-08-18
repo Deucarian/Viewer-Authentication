@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.viewer-authentication",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "displayName": "Deucarian Viewer Authentication",
   "description": "Reusable viewer authentication composition, Edit Mode token acquisition, optional server validation, sanitized lifecycle commands, and local-only editor tooling.",
   "unity": "2021.3",
