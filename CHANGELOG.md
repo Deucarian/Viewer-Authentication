@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 - 2026-08-19
+
+- Added a prominent backend-target card that shows the active server origin
+  and exact sign-in and token-check endpoints without clipping long URLs.
+- Warned when acquisition and validation profiles target different backend
+  origins, while keeping endpoint and environment semantics project-owned.
+- Made the menu explicit that current endpoint profiles are fixed and that
+  environment switching is not enabled yet.
+
 ## 0.3.0 - 2026-08-18
 
 - Added an ephemeral window-owned Edit Mode authentication workspace that
