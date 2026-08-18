@@ -39,9 +39,8 @@ namespace Deucarian.ViewerAuthentication.Editor
                 ViewerAuthenticationLocalSettings.instance;
             if (!settings.AutoApply ||
                 !settings.HasRememberedAccessToken ||
-                string.IsNullOrWhiteSpace(settings.SelectedTargetId) ||
-                !ViewerAuthenticationTargetRegistry.TryGet(
-                    settings.SelectedTargetId,
+                !TryResolveTarget(
+                    settings,
                     out ViewerAuthenticationTarget target))
             {
                 return;
@@ -60,6 +59,31 @@ namespace Deucarian.ViewerAuthentication.Editor
             }
 
             ApplyAsync(target, settings.RememberedAccessToken);
+        }
+
+        private static bool TryResolveTarget(
+            ViewerAuthenticationLocalSettings settings,
+            out ViewerAuthenticationTarget target)
+        {
+            if (!string.IsNullOrWhiteSpace(settings.SelectedTargetId) &&
+                ViewerAuthenticationTargetRegistry.TryGet(
+                    settings.SelectedTargetId,
+                    out target))
+            {
+                return true;
+            }
+
+            IReadOnlyList<ViewerAuthenticationTarget> targets =
+                ViewerAuthenticationTargetRegistry.Targets;
+            if (targets.Count != 1)
+            {
+                target = null;
+                return false;
+            }
+
+            target = targets[0];
+            settings.SetSelectedTarget(target.Id);
+            return true;
         }
 
         private static async void ApplyAsync(

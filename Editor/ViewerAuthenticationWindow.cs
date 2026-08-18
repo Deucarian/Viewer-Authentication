@@ -80,6 +80,16 @@ namespace Deucarian.ViewerAuthentication.Editor
             }
 
             int selectedIndex = ResolveSelectedIndex(targets);
+            ViewerAuthenticationLocalSettings localSettings =
+                ViewerAuthenticationLocalSettings.instance;
+            if (!string.Equals(
+                    localSettings.SelectedTargetId,
+                    targets[selectedIndex].Id,
+                    StringComparison.Ordinal))
+            {
+                localSettings.SetSelectedTarget(targets[selectedIndex].Id);
+            }
+
             string[] displayNames = new string[targets.Count];
             for (int i = 0; i < targets.Count; i++)
             {
