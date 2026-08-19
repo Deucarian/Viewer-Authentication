@@ -92,7 +92,7 @@ namespace Deucarian.ViewerAuthentication
             {
                 foreach (string origin in additionalOrigins)
                 {
-                    origins.Add(NormalizeOrigin(origin));
+                    origins.Add(NormalizeExactOrigin(origin));
                 }
             }
 
@@ -108,6 +108,24 @@ namespace Deucarian.ViewerAuthentication
             {
                 throw new ArgumentException(
                     "Authenticated origins must be absolute HTTP(S) origins.",
+                    nameof(value));
+            }
+
+            return uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
+        }
+
+        private static string NormalizeExactOrigin(string value)
+        {
+            if (!TryCreateHttpUri(value, out Uri uri) ||
+                !string.IsNullOrEmpty(uri.UserInfo) ||
+                (!string.IsNullOrEmpty(uri.AbsolutePath) &&
+                 !string.Equals(uri.AbsolutePath, "/", StringComparison.Ordinal)) ||
+                !string.IsNullOrEmpty(uri.Query) ||
+                !string.IsNullOrEmpty(uri.Fragment))
+            {
+                throw new ArgumentException(
+                    "Additional authenticated origins must be exact HTTP(S) " +
+                    "origins without a path, query, fragment, or user info.",
                     nameof(value));
             }
 

@@ -29,7 +29,7 @@ namespace Deucarian.ViewerAuthentication.Tests
                 session,
                 client,
                 "https://api.example.test/v2",
-                new[] { "https://assets.example.test/path-is-normalized" },
+                new[] { "https://assets.example.test" },
                 lifetime);
             IDisposable registration =
                 ViewerRuntimeConnectionProviderRegistry.Register(
@@ -81,6 +81,54 @@ namespace Deucarian.ViewerAuthentication.Tests
             {
                 registration.Dispose();
             }
+        }
+
+        [Test]
+        public void ProviderConnectionAssignedBeforeThrowIsDisposed()
+        {
+            var lifetime = new TrackingDisposable();
+            var connection = new ViewerRuntimeConnection(
+                "stable-viewer",
+                ViewerAuthenticationSession.CreateTransient(),
+                ApiClientFactory.CreateDefault(),
+                "https://api.example.test/v2",
+                null,
+                lifetime);
+            IDisposable registration =
+                ViewerRuntimeConnectionProviderRegistry.Register(
+                    new ThrowingProvider("provider-throws", connection));
+            try
+            {
+                ViewerRuntimeConnectionResolution resolution =
+                    ViewerRuntimeConnectionProviderRegistry.Resolve();
+
+                Assert.That(
+                    resolution.Status,
+                    Is.EqualTo(ViewerRuntimeConnectionResolutionStatus.Failed));
+                Assert.That(resolution.Connection, Is.Null);
+                Assert.That(lifetime.Disposed, Is.True);
+            }
+            finally
+            {
+                registration.Dispose();
+            }
+        }
+
+        [TestCase("https://assets.example.test/path")]
+        [TestCase("https://assets.example.test?scope=wide")]
+        [TestCase("https://assets.example.test#fragment")]
+        [TestCase("https://user@assets.example.test")]
+        public void AdditionalAuthenticatedOriginsMustAlreadyBeExactOrigins(
+            string additionalOrigin)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new ViewerRuntimeConnection(
+                    "stable-viewer",
+                    ViewerAuthenticationSession.CreateTransient(),
+                    ApiClientFactory.CreateDefault(),
+                    "https://api.example.test/v2",
+                    new[] { additionalOrigin },
+                    new TrackingDisposable()));
         }
 
         [Test]
@@ -151,6 +199,31 @@ namespace Deucarian.ViewerAuthentication.Tests
             public void Dispose()
             {
                 Disposed = true;
+            }
+        }
+
+        private sealed class ThrowingProvider :
+            IViewerRuntimeConnectionProvider
+        {
+            private readonly ViewerRuntimeConnection connection;
+
+            internal ThrowingProvider(
+                string id,
+                ViewerRuntimeConnection connection)
+            {
+                Id = id;
+                this.connection = connection;
+            }
+
+            public string Id { get; }
+
+            public bool TryCreate(
+                out ViewerRuntimeConnection created,
+                out string message)
+            {
+                created = connection;
+                message = null;
+                throw new InvalidOperationException("Provider failed.");
             }
         }
     }
