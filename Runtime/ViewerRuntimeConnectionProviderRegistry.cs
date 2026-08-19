@@ -128,14 +128,15 @@ namespace Deucarian.ViewerAuthentication
                     "exactly one is required.");
             }
 
+            ViewerRuntimeConnection connection = null;
             try
             {
                 if (!snapshot[0].TryCreate(
-                        out ViewerRuntimeConnection connection,
+                        out connection,
                         out string error) ||
                     connection == null)
                 {
-                    connection?.Dispose();
+                    TryDispose(connection);
                     return ViewerRuntimeConnectionResolution.Failure(
                         ViewerRuntimeConnectionResolutionStatus.Failed,
                         string.IsNullOrWhiteSpace(error)
@@ -147,10 +148,28 @@ namespace Deucarian.ViewerAuthentication
             }
             catch (Exception exception)
             {
+                TryDispose(connection);
                 return ViewerRuntimeConnectionResolution.Failure(
                     ViewerRuntimeConnectionResolutionStatus.Failed,
                     "The runtime connection provider failed (" +
                     exception.GetType().Name + ").");
+            }
+        }
+
+        private static void TryDispose(ViewerRuntimeConnection connection)
+        {
+            if (connection == null)
+            {
+                return;
+            }
+
+            try
+            {
+                connection.Dispose();
+            }
+            catch (Exception)
+            {
+                // Provider cleanup must not replace the fail-closed result.
             }
         }
 

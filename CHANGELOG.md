@@ -12,6 +12,9 @@
   base URL, and exact authenticated origins to optional viewer integrations.
 - Zero providers preserve consumer fallback behavior; provider failure and
   multiple-provider ambiguity fail closed.
+- Hardened provider failure cleanup, exact-origin validation, and target
+  registry notifications so third-party failures cannot leak a connection or
+  leave an orphaned stable target registration.
 
 ## 0.4.0 - 2026-08-19
 

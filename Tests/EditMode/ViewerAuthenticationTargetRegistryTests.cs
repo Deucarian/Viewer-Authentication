@@ -127,6 +127,60 @@ namespace Deucarian.ViewerAuthentication.Tests
             }
         }
 
+        [Test]
+        public void ThrowingObserversCannotOrphanOrWedgeRegistration()
+        {
+            string id = "target-" + Guid.NewGuid().ToString("N");
+            void ThrowOnRegistrationsChanged()
+            {
+                throw new InvalidOperationException("Observer failed.");
+            }
+
+            void ThrowOnTargetsChanged()
+            {
+                throw new InvalidOperationException("Observer failed.");
+            }
+
+            ViewerAuthenticationTargetRegistry.RegistrationsChanged +=
+                ThrowOnRegistrationsChanged;
+            ViewerAuthenticationTargetRegistry.TargetsChanged +=
+                ThrowOnTargetsChanged;
+            IDisposable registration = null;
+            try
+            {
+                Assert.DoesNotThrow(() =>
+                    registration = ViewerAuthenticationTargetRegistry.Register(
+                        id,
+                        "Observable",
+                        ViewerAuthenticationSession.CreateTransient()));
+                Assert.That(registration, Is.Not.Null);
+                Assert.That(
+                    ViewerAuthenticationTargetRegistry.TryGet(id, out _),
+                    Is.True);
+
+                Assert.DoesNotThrow(() => registration.Dispose());
+                Assert.That(
+                    ViewerAuthenticationTargetRegistry.TryGet(id, out _),
+                    Is.False);
+
+                IDisposable replacement = null;
+                Assert.DoesNotThrow(() =>
+                    replacement = ViewerAuthenticationTargetRegistry.Register(
+                        id,
+                        "Replacement",
+                        ViewerAuthenticationSession.CreateTransient()));
+                replacement.Dispose();
+            }
+            finally
+            {
+                registration?.Dispose();
+                ViewerAuthenticationTargetRegistry.RegistrationsChanged -=
+                    ThrowOnRegistrationsChanged;
+                ViewerAuthenticationTargetRegistry.TargetsChanged -=
+                    ThrowOnTargetsChanged;
+            }
+        }
+
         private sealed class StubAcquisitionProvider :
             IViewerAuthenticationAcquisitionProvider
         {
