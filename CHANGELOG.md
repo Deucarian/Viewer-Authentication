@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0 - 2026-08-19
+
+- Reframed the Editor workflow as one minimalist connection workspace with a
+  compact status, current backend host, human-readable expiry, and one
+  contextual primary action.
+- Moved exact routes, sign-in fields, manual token entry, and local storage
+  behind collapsed disclosures, kept credential and manual forms mutually
+  exclusive, and clear transient values on target or play-mode changes.
+- Limited explicit server rechecks to inconclusive validation states and kept
+  environment presentation neutral until projects supply explicit environment
+  metadata in a future release.
+- Added a pure, token-free presentation contract with deterministic coverage
+  for status priority, action selection, disclosure defaults, and relative
+  expiry labels.
+- Distinguishes inspectable endpoint profiles from opaque custom providers and
+  refreshes time-sensitive status copy while the window remains open.
+- Binds each remembered token to its exact viewer independently of the visible
+  viewer selection, and invalidates in-flight work when that context changes.
+
 ## 0.3.1 - 2026-08-19
 
 - Added a prominent backend-target card that shows the active server origin

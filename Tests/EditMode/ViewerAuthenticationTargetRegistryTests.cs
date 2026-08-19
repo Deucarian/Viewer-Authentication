@@ -77,13 +77,21 @@ namespace Deucarian.ViewerAuthentication.Tests
             ViewerAuthenticationSession session =
                 ViewerAuthenticationSession.CreateTransient();
             int changeCount = 0;
+            int registrationChangeCount = 0;
             void OnTargetsChanged()
             {
                 changeCount++;
             }
 
+            void OnRegistrationsChanged()
+            {
+                registrationChangeCount++;
+            }
+
             ViewerAuthenticationTargetRegistry.TargetsChanged +=
                 OnTargetsChanged;
+            ViewerAuthenticationTargetRegistry.RegistrationsChanged +=
+                OnRegistrationsChanged;
             IDisposable registration = null;
             try
             {
@@ -92,14 +100,18 @@ namespace Deucarian.ViewerAuthentication.Tests
                     "Observable",
                     session);
                 Assert.That(changeCount, Is.EqualTo(1));
+                Assert.That(registrationChangeCount, Is.EqualTo(1));
 
                 await session.ReplaceAccessTokenAsync("first-token");
                 Assert.That(changeCount, Is.EqualTo(2));
+                Assert.That(registrationChangeCount, Is.EqualTo(1));
 
                 registration.Dispose();
                 Assert.That(changeCount, Is.EqualTo(3));
+                Assert.That(registrationChangeCount, Is.EqualTo(2));
                 await session.ReplaceAccessTokenAsync("second-token");
                 Assert.That(changeCount, Is.EqualTo(3));
+                Assert.That(registrationChangeCount, Is.EqualTo(2));
             }
             finally
             {
@@ -110,6 +122,8 @@ namespace Deucarian.ViewerAuthentication.Tests
 
                 ViewerAuthenticationTargetRegistry.TargetsChanged -=
                     OnTargetsChanged;
+                ViewerAuthenticationTargetRegistry.RegistrationsChanged -=
+                    OnRegistrationsChanged;
             }
         }
 

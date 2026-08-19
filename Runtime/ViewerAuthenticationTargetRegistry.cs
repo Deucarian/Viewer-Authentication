@@ -14,8 +14,17 @@ namespace Deucarian.ViewerAuthentication
         private static readonly List<ViewerAuthenticationTarget> Registered =
             new List<ViewerAuthenticationTarget>();
 
-        /// <summary>Raised after targets are registered or disposed.</summary>
+        /// <summary>
+        /// Raised after registrations change or a registered session changes.
+        /// </summary>
         public static event Action TargetsChanged;
+
+        /// <summary>
+        /// Raised only when the set of registered targets changes. Session
+        /// mutations continue to raise <see cref="TargetsChanged"/> without
+        /// raising this structural event.
+        /// </summary>
+        public static event Action RegistrationsChanged;
 
         /// <summary>Gets an immutable snapshot of current targets.</summary>
         public static IReadOnlyList<ViewerAuthenticationTarget> Targets
@@ -88,7 +97,7 @@ namespace Deucarian.ViewerAuthentication
                 Registered.Add(target);
             }
 
-            RaiseTargetsChanged();
+            RaiseRegistrationsChanged();
             return new Registration(target);
         }
 
@@ -140,7 +149,7 @@ namespace Deucarian.ViewerAuthentication
 
             if (removed)
             {
-                RaiseTargetsChanged();
+                RaiseRegistrationsChanged();
             }
         }
 
@@ -151,6 +160,17 @@ namespace Deucarian.ViewerAuthentication
             {
                 handler();
             }
+        }
+
+        private static void RaiseRegistrationsChanged()
+        {
+            Action handler = RegistrationsChanged;
+            if (handler != null)
+            {
+                handler();
+            }
+
+            RaiseTargetsChanged();
         }
 
         private sealed class Registration : IDisposable
