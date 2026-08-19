@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0 - 2026-08-19
+
+- Added an Editor-only remembered-token owner rebind operation for safe
+  one-time migration between stable target IDs. The caller must match the
+  current owner before it can assign the replacement owner.
+- Owner rebinds never expose, copy, replace, log, or preview the token value and
+  do not enable local remembering when it was disabled.
+- Added an explicit, vendor-neutral runtime connection provider registry that
+  supplies one stable authentication session, its composed API client, API
+  base URL, and exact authenticated origins to optional viewer integrations.
+- Zero providers preserve consumer fallback behavior; provider failure and
+  multiple-provider ambiguity fail closed.
+- Hardened provider failure cleanup, exact-origin validation, and target
+  registry notifications so third-party failures cannot leak a connection or
+  leave an orphaned stable target registration.
+
 ## 0.4.0 - 2026-08-19
 
 - Reframed the Editor workflow as one minimalist connection workspace with a

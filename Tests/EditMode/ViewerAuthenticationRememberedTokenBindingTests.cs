@@ -49,5 +49,42 @@ namespace Deucarian.ViewerAuthentication.Tests
                     hasRememberedToken: false),
                 Is.Empty);
         }
+
+        [Test]
+        public void OwnerRebindChangesOnlyTheTokenFreeOwnerIdentity()
+        {
+            bool rebound = ViewerAuthenticationRememberedTokenBinding
+                .TryRebindOwner(
+                    " report-viewer ",
+                    "report-viewer",
+                    " simultria-viewer ",
+                    hasRememberedToken: true,
+                    out string owner);
+
+            Assert.That(rebound, Is.True);
+            Assert.That(owner, Is.EqualTo("simultria-viewer"));
+        }
+
+        [TestCase(null, "report-viewer", "simultria-viewer", true)]
+        [TestCase("report-viewer", null, "simultria-viewer", true)]
+        [TestCase("report-viewer", "report-viewer", null, true)]
+        [TestCase("report-viewer", "activity-viewer", "simultria-viewer", true)]
+        [TestCase("report-viewer", "report-viewer", "simultria-viewer", false)]
+        public void OwnerRebindRejectsMissingOwnershipContext(
+            string currentOwner,
+            string expectedCurrentOwner,
+            string targetOwner,
+            bool hasRememberedToken)
+        {
+            bool rebound = ViewerAuthenticationRememberedTokenBinding
+                .TryRebindOwner(
+                    currentOwner,
+                    expectedCurrentOwner,
+                    targetOwner,
+                    hasRememberedToken,
+                    out _);
+
+            Assert.That(rebound, Is.False);
+        }
     }
 }

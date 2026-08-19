@@ -155,22 +155,35 @@ namespace Deucarian.ViewerAuthentication
 
         private static void RaiseTargetsChanged()
         {
-            Action handler = TargetsChanged;
-            if (handler != null)
-            {
-                handler();
-            }
+            InvokeSubscribers(TargetsChanged);
         }
 
         private static void RaiseRegistrationsChanged()
         {
-            Action handler = RegistrationsChanged;
-            if (handler != null)
+            InvokeSubscribers(RegistrationsChanged);
+            RaiseTargetsChanged();
+        }
+
+        private static void InvokeSubscribers(Action handlers)
+        {
+            if (handlers == null)
             {
-                handler();
+                return;
             }
 
-            RaiseTargetsChanged();
+            Delegate[] subscribers = handlers.GetInvocationList();
+            for (int i = 0; i < subscribers.Length; i++)
+            {
+                try
+                {
+                    ((Action)subscribers[i])();
+                }
+                catch (Exception)
+                {
+                    // Observers must never make registry mutations partial or
+                    // prevent callers from receiving/disposal of their handle.
+                }
+            }
         }
 
         private sealed class Registration : IDisposable
