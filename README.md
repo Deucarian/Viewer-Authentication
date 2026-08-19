@@ -38,6 +38,24 @@ Without a refresh service, token replacement and clear remain available while
 `CanRefresh` is false. Input may contain an optional `Bearer` prefix; the
 session always stores the normalized token.
 
+### Optional runtime connection composition
+
+A backend integration can explicitly register one
+`IViewerRuntimeConnectionProvider`. Generic viewers call
+`ViewerRuntimeConnectionProviderRegistry.Resolve()` while composing:
+
+- `None` means no integration is installed, so the viewer keeps its existing
+  local composition;
+- `Resolved` supplies one stable target/session, the API client backed by that
+  same session, a resolved API base URL, and exact authenticated origins;
+- `Failed` and `Ambiguous` fail closed and must never fall back to a second
+  unauthenticated or differently authenticated client.
+
+The returned `ViewerRuntimeConnection` is an owned lease and must be disposed
+with the viewer. Providers remain vendor-specific; this package owns only the
+neutral deterministic seam and never discovers implementations by reflection.
+Bearer values are not part of the connection contract, URLs, or payloads.
+
 ## Configurable endpoint reacquisition
 
 Session API Integration 1.1.1 supplies a credential-free
@@ -157,6 +175,21 @@ minute old; `Check again` appears after an inconclusive probe. HTTP 401/403 is p
 mapping failures are presented as unable to check. Neither outcome deletes the
 remembered token. Projects with a non-endpoint validation mechanism can instead
 inject `IViewerAuthenticationValidationProvider` when registering a target.
+
+An Editor integration that temporarily owns authentication outside Play Mode
+can hand the existing local token between stable target identities without
+reading the token value:
+
+```csharp
+ViewerAuthenticationRememberedTokenFacade.TryRebindOwner(
+    "legacy-product-target",
+    "package-editor-target");
+```
+
+This owner-only operation succeeds only when local remembering is already
+enabled, a token already exists, and that token belongs to the expected current
+owner. It does not enable persistence or change the token, and an optional
+package cannot blindly claim another target's remembered credential.
 
 ## Acquisition providers
 

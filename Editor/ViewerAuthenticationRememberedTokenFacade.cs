@@ -92,5 +92,26 @@ namespace Deucarian.ViewerAuthentication.Editor
             accessToken = settings.RememberedAccessToken;
             return !string.IsNullOrWhiteSpace(accessToken);
         }
+
+        /// <summary>
+        /// Rebinds an existing remembered token to another stable target ID
+        /// without exposing or replacing the token value. This does not enable
+        /// local remembering and returns false when no token is remembered.
+        /// </summary>
+        public static bool TryRebindOwner(
+            string expectedCurrentTargetId,
+            string targetId)
+        {
+            if (string.IsNullOrWhiteSpace(expectedCurrentTargetId) ||
+                string.IsNullOrWhiteSpace(targetId))
+            {
+                return false;
+            }
+
+            return ViewerAuthenticationLocalSettings.instance
+                .TryRebindRememberedTokenOwner(
+                    expectedCurrentTargetId.Trim(),
+                    targetId.Trim());
+        }
     }
 }
