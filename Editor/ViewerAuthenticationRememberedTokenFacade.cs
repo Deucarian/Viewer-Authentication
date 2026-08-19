@@ -84,11 +84,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             ViewerAuthenticationLocalSettings settings =
                 ViewerAuthenticationLocalSettings.instance;
             if (string.IsNullOrWhiteSpace(targetId) ||
-                !settings.HasRememberedAccessToken ||
-                !string.Equals(
-                    settings.SelectedTargetId,
-                    targetId.Trim(),
-                    System.StringComparison.Ordinal))
+                !settings.HasRememberedAccessTokenFor(targetId))
             {
                 return false;
             }

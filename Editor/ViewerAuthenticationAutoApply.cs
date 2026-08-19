@@ -65,25 +65,16 @@ namespace Deucarian.ViewerAuthentication.Editor
             ViewerAuthenticationLocalSettings settings,
             out ViewerAuthenticationTarget target)
         {
-            if (!string.IsNullOrWhiteSpace(settings.SelectedTargetId) &&
+            if (!string.IsNullOrWhiteSpace(settings.RememberedTargetId) &&
                 ViewerAuthenticationTargetRegistry.TryGet(
-                    settings.SelectedTargetId,
+                    settings.RememberedTargetId,
                     out target))
             {
                 return true;
             }
 
-            IReadOnlyList<ViewerAuthenticationTarget> targets =
-                ViewerAuthenticationTargetRegistry.Targets;
-            if (targets.Count != 1)
-            {
-                target = null;
-                return false;
-            }
-
-            target = targets[0];
-            settings.SetSelectedTarget(target.Id);
-            return true;
+            target = null;
+            return false;
         }
 
         private static async void ApplyAsync(
