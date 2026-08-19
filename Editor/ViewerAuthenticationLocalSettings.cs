@@ -183,6 +183,47 @@ namespace Deucarian.ViewerAuthentication.Editor
             return migrated;
         }
 
+        internal bool TryRebindRememberedTokenOwner(
+            string expectedCurrentTargetId,
+            string targetId)
+        {
+            if (!ViewerAuthenticationRememberedTokenBinding.TryRebindOwner(
+                    RememberedTargetId,
+                    expectedCurrentTargetId,
+                    targetId,
+                    HasRememberedAccessToken,
+                    out string reboundOwner))
+            {
+                return false;
+            }
+
+            string previousSelectedTargetId = selectedTargetId;
+            string previousRememberedTargetId = rememberedTargetId;
+            try
+            {
+                rememberedTargetId = reboundOwner;
+                selectedTargetId = reboundOwner;
+                Save(true);
+                return HasRememberedAccessTokenFor(reboundOwner);
+            }
+            catch
+            {
+                selectedTargetId = previousSelectedTargetId;
+                rememberedTargetId = previousRememberedTargetId;
+                try
+                {
+                    Save(true);
+                }
+                catch
+                {
+                    // Keep the existing in-memory ownership. No token value is
+                    // read or copied by an owner-only rebind operation.
+                }
+
+                return false;
+            }
+        }
+
         internal void ClearRememberedToken()
         {
             rememberedAccessToken = string.Empty;
@@ -229,6 +270,27 @@ namespace Deucarian.ViewerAuthentication.Editor
                        rememberedTargetId.Trim(),
                        targetId.Trim(),
                        System.StringComparison.Ordinal);
+        }
+
+        internal static bool TryRebindOwner(
+            string currentOwnerId,
+            string expectedCurrentOwnerId,
+            string targetId,
+            bool hasRememberedToken,
+            out string reboundOwnerId)
+        {
+            reboundOwnerId = currentOwnerId?.Trim() ?? string.Empty;
+            if (!hasRememberedToken ||
+                reboundOwnerId.Length == 0 ||
+                string.IsNullOrWhiteSpace(expectedCurrentOwnerId) ||
+                !Matches(reboundOwnerId, expectedCurrentOwnerId) ||
+                string.IsNullOrWhiteSpace(targetId))
+            {
+                return false;
+            }
+
+            reboundOwnerId = targetId.Trim();
+            return true;
         }
     }
 }
