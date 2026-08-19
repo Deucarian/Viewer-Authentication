@@ -156,6 +156,34 @@ namespace Deucarian.ViewerAuthentication.Tests
                 Is.False);
         }
 
+        [Test]
+        public async Task CancellationAfterProviderReturnCannotPublishAResult()
+        {
+            var controller = new ViewerAuthenticationAssessmentController();
+            ViewerAuthenticationTarget target = CreateTarget("late-cancel");
+            await target.Session.ReplaceAccessTokenAsync("opaque-test-token");
+            var cancellation = new CancellationTokenSource();
+            var provider = new DeferredValidationProvider();
+
+            Task assessmentTask = controller.AssessAsync(
+                target,
+                provider,
+                true,
+                cancellation.Token);
+            Assert.That(controller.IsInProgress(target.Id), Is.True);
+
+            cancellation.Cancel();
+            provider.Complete(
+                ViewerAuthenticationValidationResult.Verified());
+
+            Assert.CatchAsync<OperationCanceledException>(async () =>
+                await assessmentTask);
+            Assert.That(controller.IsInProgress(target.Id), Is.False);
+            Assert.That(
+                controller.TryGetSnapshot(target.Id, out _),
+                Is.False);
+        }
+
         private static ViewerAuthenticationTarget CreateTarget(string id)
         {
             return new ViewerAuthenticationTarget(
@@ -211,6 +239,34 @@ namespace Deucarian.ViewerAuthentication.Tests
                 cancellationToken.ThrowIfCancellationRequested();
                 return Task.FromResult(
                     ViewerAuthenticationValidationResult.Inconclusive());
+            }
+        }
+
+        private sealed class DeferredValidationProvider :
+            IViewerAuthenticationValidationProvider
+        {
+            private readonly TaskCompletionSource<
+                ViewerAuthenticationValidationResult> completion =
+                    new TaskCompletionSource<
+                        ViewerAuthenticationValidationResult>();
+
+            public string DisplayName
+            {
+                get { return "Deferred validation"; }
+            }
+
+            public Task<ViewerAuthenticationValidationResult> ValidateAsync(
+                ISessionService sessionService,
+                CancellationToken cancellationToken =
+                    default(CancellationToken))
+            {
+                return completion.Task;
+            }
+
+            internal void Complete(
+                ViewerAuthenticationValidationResult result)
+            {
+                completion.SetResult(result);
             }
         }
     }
