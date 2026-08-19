@@ -20,6 +20,9 @@ namespace Deucarian.ViewerAuthentication.Editor
         [UnityEngine.SerializeField]
         private string rememberedAccessToken = string.Empty;
 
+        [UnityEngine.SerializeField]
+        private string rememberedTargetId = string.Empty;
+
         internal string SelectedTargetId
         {
             get { return selectedTargetId ?? string.Empty; }
@@ -54,8 +57,34 @@ namespace Deucarian.ViewerAuthentication.Editor
             }
         }
 
+        internal string RememberedTargetId
+        {
+            get
+            {
+                if (!HasRememberedAccessToken)
+                {
+                    return string.Empty;
+                }
+
+                return ViewerAuthenticationRememberedTokenBinding
+                    .ResolveOwner(
+                        rememberedTargetId,
+                        SelectedTargetId,
+                        hasRememberedToken: true);
+            }
+        }
+
+        internal bool HasRememberedAccessTokenFor(string targetId)
+        {
+            return HasRememberedAccessToken &&
+                   ViewerAuthenticationRememberedTokenBinding.Matches(
+                       RememberedTargetId,
+                       targetId);
+        }
+
         internal void SetSelectedTarget(string targetId)
         {
+            CaptureLegacyRememberedTarget();
             selectedTargetId = targetId ?? string.Empty;
             Save(true);
         }
@@ -67,6 +96,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             {
                 autoApply = false;
                 rememberedAccessToken = string.Empty;
+                rememberedTargetId = string.Empty;
             }
 
             Save(true);
@@ -88,7 +118,12 @@ namespace Deucarian.ViewerAuthentication.Editor
                 return;
             }
 
-            selectedTargetId = targetId ?? string.Empty;
+            rememberedTargetId = targetId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(selectedTargetId))
+            {
+                selectedTargetId = rememberedTargetId;
+            }
+
             rememberedAccessToken = accessToken;
             Save(true);
         }
@@ -98,6 +133,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             string accessToken)
         {
             string previousTargetId = selectedTargetId;
+            string previousRememberedTargetId = rememberedTargetId;
             string previousToken = rememberedAccessToken;
             bool previousRemember = rememberAccessToken;
             bool previousAutoApply = autoApply;
@@ -105,15 +141,16 @@ namespace Deucarian.ViewerAuthentication.Editor
             try
             {
                 selectedTargetId = targetId;
+                rememberedTargetId = targetId;
                 rememberedAccessToken = accessToken;
                 rememberAccessToken = true;
                 autoApply = true;
                 Save(true);
                 migrated = rememberAccessToken &&
                            autoApply &&
-                           string.Equals(
-                               selectedTargetId,
-                               targetId,
+                            string.Equals(
+                                rememberedTargetId,
+                                targetId,
                                System.StringComparison.Ordinal) &&
                            string.Equals(
                                rememberedAccessToken,
@@ -123,6 +160,7 @@ namespace Deucarian.ViewerAuthentication.Editor
             catch
             {
                 selectedTargetId = previousTargetId;
+                rememberedTargetId = previousRememberedTargetId;
                 rememberedAccessToken = previousToken;
                 rememberAccessToken = previousRemember;
                 autoApply = previousAutoApply;
@@ -148,7 +186,49 @@ namespace Deucarian.ViewerAuthentication.Editor
         internal void ClearRememberedToken()
         {
             rememberedAccessToken = string.Empty;
+            rememberedTargetId = string.Empty;
             Save(true);
+        }
+
+        private void CaptureLegacyRememberedTarget()
+        {
+            if (HasRememberedAccessToken &&
+                string.IsNullOrWhiteSpace(rememberedTargetId))
+            {
+                rememberedTargetId =
+                    ViewerAuthenticationRememberedTokenBinding.ResolveOwner(
+                        rememberedTargetId,
+                        selectedTargetId,
+                        hasRememberedToken: true);
+            }
+        }
+    }
+
+    internal static class ViewerAuthenticationRememberedTokenBinding
+    {
+        internal static string ResolveOwner(
+            string explicitOwnerId,
+            string legacySelectedTargetId,
+            bool hasRememberedToken)
+        {
+            if (!hasRememberedToken)
+            {
+                return string.Empty;
+            }
+
+            return !string.IsNullOrWhiteSpace(explicitOwnerId)
+                ? explicitOwnerId.Trim()
+                : legacySelectedTargetId?.Trim() ?? string.Empty;
+        }
+
+        internal static bool Matches(string rememberedTargetId, string targetId)
+        {
+            return !string.IsNullOrWhiteSpace(rememberedTargetId) &&
+                   !string.IsNullOrWhiteSpace(targetId) &&
+                   string.Equals(
+                       rememberedTargetId.Trim(),
+                       targetId.Trim(),
+                       System.StringComparison.Ordinal);
         }
     }
 }

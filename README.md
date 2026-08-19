@@ -105,22 +105,34 @@ and is discarded when the window closes. In Play Mode, the window uses the
 explicitly registered viewer session. A viewer selector is shown only when more
 than one real configuration is available.
 
-The window offers:
+The window opens on one compact connection workspace. It presents the current
+backend host, sanitized connection status, human-readable expiry, and one
+contextual action. Exact routes and less common controls remain available
+without competing with the normal path:
 
-- masked paste-and-replace input, cleared immediately after use;
-- one `Get New Token` sign-in action and compact advanced token controls;
+- connection details disclose the exact active origin, sign-in URL, validation
+  URL, and any cross-origin warning;
+- sign-in fields stay collapsed until `Sign in` or `Get new token` is chosen;
+- masked paste-and-replace input is advanced and cleared immediately after use;
 - provider-defined masked or plain transient acquisition fields;
 - sanitized Missing, Active, Expiring, Expired, or Expiry Unknown state;
 - automatic local JWT expiry assessment on open and focus;
 - optional automatic server validation on open and focus;
-- a prominent backend-target card with the exact active origin, sign-in URL,
-  and validation URL, plus a warning when those origins differ;
-- opt-in local remembering, one-click apply, and auto-apply.
+- opt-in local remembering, one-click apply, and auto-apply behind a collapsed
+  local-storage disclosure.
+
+The neutral target chip identifies what the package can inspect: `CURRENT` for
+a concrete endpoint set, `CUSTOM` for an opaque provider, or `UNSET` when no
+provider or endpoint exists. It does not infer an environment name from a
+hostname. Explicit environment names and switching are intentionally deferred
+until projects can provide truthful, credential-free environment metadata.
 
 Remembered tokens are stored only in the consuming project's ignored
 `UserSettings` folder. This prevents source-control inclusion, but it is not an
 OS credential vault. Do not enable remembering on a machine whose local Unity
-settings are not appropriately protected.
+settings are not appropriately protected. A remembered token is bound to the
+exact stable viewer target ID that acquired it; changing the visible viewer
+selection never reassigns that token.
 
 `Get New Token` reacquires a token through the configured provider. This
 commonly means repeating a sign-in exchange; it does not claim that the backend
@@ -141,7 +153,7 @@ Configure it for the backend's validation route, enable **Use Current Access
 Token As Bearer**, and map the successful response's access-token JSON path.
 The shared editor window discovers this profile and checks it automatically on
 open. Refocusing checks again only after the previous result is at least one
-minute old; `Check Now` remains available for an explicit retry. HTTP 401/403 is presented as rejected; transport, server, or
+minute old; `Check again` appears after an inconclusive probe. HTTP 401/403 is presented as rejected; transport, server, or
 mapping failures are presented as unable to check. Neither outcome deletes the
 remembered token. Projects with a non-endpoint validation mechanism can instead
 inject `IViewerAuthenticationValidationProvider` when registering a target.

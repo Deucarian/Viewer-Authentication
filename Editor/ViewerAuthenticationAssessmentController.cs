@@ -147,6 +147,8 @@ namespace Deucarian.ViewerAuthentication.Editor
                         .Inconclusive();
                 }
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 snapshots[target.Id] =
                     new ViewerAuthenticationAssessmentSnapshot(
                         result ?? ViewerAuthenticationValidationResult
@@ -178,6 +180,16 @@ namespace Deucarian.ViewerAuthentication.Editor
             lastAttempts.Remove(targetId);
             lastValidatedSessions.Remove(targetId);
             inProgress.Remove(targetId);
+        }
+
+        internal void ClearAll()
+        {
+            snapshots.Clear();
+            lastAttempts.Clear();
+            lastValidatedSessions.Clear();
+            // Keep active membership until each cancelled assessment reaches
+            // its own finally block. This prevents a replacement assessment
+            // for the same target from overlapping the cancelled request.
         }
 
     }
