@@ -6,7 +6,6 @@
   transient session across domain reloads and Edit/Play transitions.
 - Handoffs require an exact caller-owned binding and are never written to
   project assets or persistent UserSettings.
-
 ## 0.5.0 - 2026-08-19
 
 - Added an Editor-only remembered-token owner rebind operation for safe
