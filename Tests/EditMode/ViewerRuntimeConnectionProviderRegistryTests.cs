@@ -2,7 +2,7 @@ using System;
 using Deucarian.API.Core;
 using NUnit.Framework;
 
-namespace Deucarian.ViewerAuthentication.Tests
+namespace Deucarian.Authentication.Tests
 {
     public sealed class ViewerRuntimeConnectionProviderRegistryTests
     {
@@ -21,7 +21,7 @@ namespace Deucarian.ViewerAuthentication.Tests
         [Test]
         public void SoleProviderResolvesAuthoritativeComposition()
         {
-            var session = ViewerAuthenticationSession.CreateTransient();
+            var session = AuthenticationSession.CreateTransient();
             IApiClient client = ApiClientFactory.CreateDefault();
             var lifetime = new TrackingDisposable();
             var expected = new ViewerRuntimeConnection(
@@ -89,7 +89,7 @@ namespace Deucarian.ViewerAuthentication.Tests
             var lifetime = new TrackingDisposable();
             var connection = new ViewerRuntimeConnection(
                 "stable-viewer",
-                ViewerAuthenticationSession.CreateTransient(),
+                AuthenticationSession.CreateTransient(),
                 ApiClientFactory.CreateDefault(),
                 "https://api.example.test/v2",
                 null,
@@ -124,7 +124,7 @@ namespace Deucarian.ViewerAuthentication.Tests
             Assert.Throws<ArgumentException>(() =>
                 new ViewerRuntimeConnection(
                     "stable-viewer",
-                    ViewerAuthenticationSession.CreateTransient(),
+                    AuthenticationSession.CreateTransient(),
                     ApiClientFactory.CreateDefault(),
                     "https://api.example.test/v2",
                     new[] { additionalOrigin },

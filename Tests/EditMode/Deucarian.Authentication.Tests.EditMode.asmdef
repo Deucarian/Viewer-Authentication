@@ -1,0 +1,40 @@
+{
+  "name": "Deucarian.Authentication.Tests.EditMode",
+  "rootNamespace": "Deucarian.Authentication.Tests",
+  "references": [
+    "Deucarian.API",
+    "Deucarian.CommandRouting",
+    "Deucarian.Session",
+    "Deucarian.Session.APIIntegration",
+    "Deucarian.Authentication",
+    "Deucarian.Authentication.ViewerIntegration",
+    "Deucarian.Authentication.Editor",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll",
+    "Newtonsoft.Json.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS",
+    "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.deucarian.command-routing",
+      "expression": "0.2.4",
+      "define": "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
+    }
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "noEngineReferences": false
+}
