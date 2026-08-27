@@ -1,20 +1,21 @@
 {
-  "packageId": "com.deucarian.viewer-authentication",
-  "displayName": "Deucarian Viewer Authentication",
+  "packageId": "com.deucarian.authentication",
+  "displayName": "Deucarian Authentication",
   "samplePolicy": "tool",
   "operationalPackage": false,
   "ownedCapabilities": [
-    "viewer-authentication"
+    "authentication"
   ],
   "runtimeAssemblies": [
-    "Deucarian.ViewerAuthentication"
+    "Deucarian.Authentication",
+    "Deucarian.Authentication.ViewerIntegration"
   ],
   "editorAssemblies": [
-    "Deucarian.ViewerAuthentication.Editor"
+    "Deucarian.Authentication.Editor"
   ],
   "sampleAssemblies": [],
   "testAssemblies": [
-    "Deucarian.ViewerAuthentication.Tests.EditMode"
+    "Deucarian.Authentication.Tests.EditMode"
   ],
   "requiredDependencies": [
     "com.deucarian.api",
