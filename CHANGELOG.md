@@ -6,7 +6,8 @@
   Viewer Authentication to generic Authentication responsibility names.
 - Isolated Command Routing and runtime-viewer seams in the optional
   `Deucarian.Authentication.ViewerIntegration` assembly; the generic core has
-  no viewer or Command Routing dependency.
+  no viewer or Command Routing dependency. The UPM package no longer requires
+  Command Routing; the adapter is enabled only when that package is installed.
 - Replaced plaintext remembered-token `UserSettings` persistence with an
   atomic platform-protected session store supporting access tokens, refresh
   tokens, and expiry metadata.

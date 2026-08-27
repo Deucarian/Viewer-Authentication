@@ -23,9 +23,16 @@
   ],
   "autoReferenced": false,
   "defineConstraints": [
-    "UNITY_INCLUDE_TESTS"
+    "UNITY_INCLUDE_TESTS",
+    "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
   ],
-  "versionDefines": [],
+  "versionDefines": [
+    {
+      "name": "com.deucarian.command-routing",
+      "expression": "0.2.4",
+      "define": "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
+    }
+  ],
   "optionalUnityReferences": [
     "TestAssemblies"
   ],

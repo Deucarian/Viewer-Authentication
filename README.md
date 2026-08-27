@@ -74,7 +74,10 @@ clear it; closing a viewer or failing a viewer connection does not.
 `Deucarian.Authentication.ViewerIntegration` contains the Command Routing
 handlers and the optional `ViewerRuntimeConnectionProviderRegistry` seam. It
 depends one way on `Deucarian.Authentication`; the generic core assembly does
-not reference Command Routing or viewer contracts.
+not reference Command Routing or viewer contracts. Command Routing is not a
+required UPM dependency: Unity enables this adapter assembly through an asmdef
+version define only when `com.deucarian.command-routing` 0.2.4 or newer is
+already installed by the viewer composition.
 
 ## Validation
 
