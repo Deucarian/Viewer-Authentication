@@ -1,13 +1,13 @@
-# Deucarian Viewer Authentication Agent Notes
+# Deucarian Authentication Agent Notes
 
-Package ID: `com.deucarian.viewer-authentication`
+Package ID: `com.deucarian.authentication`
 
 Follow the canonical Deucarian architecture and capability rules in Package
 Registry.
 
 ## Ownership
 
-This package owns reusable viewer authentication composition: the viewer-facing
+This package owns reusable authentication composition: the viewer-facing
 session/token facade, sanitized authentication status, explicit development
 target registration, authentication command adapters, and the local-only
 editor workflow used to replace, refresh, clear, or acquire a development

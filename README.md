@@ -1,236 +1,86 @@
-# Deucarian Viewer Authentication
+# Deucarian Authentication
 
-`com.deucarian.viewer-authentication` provides the reusable authentication
-boundary for Deucarian viewers. It composes Deucarian Session with the Session
-API adapter, exposes sanitized authentication state, supplies generic
-authentication command handlers, and adds a local-only Unity Editor workflow.
+`com.deucarian.authentication` provides generic authentication sessions,
+acquisition and validation contracts, stable target registration, secure
+Editor persistence, and shared Editor UI. The generic core has no viewer or
+Command Routing dependency.
 
 ## Install
 
-Install the package through the Deucarian Package Installer or its stable or
-development Git URL.
+Install the package through the Deucarian Package Installer or pin the required
+feature commit while this breaking migration is under review.
 
 ## Runtime composition
 
 ```csharp
-using Deucarian.ViewerAuthentication;
+using Deucarian.Authentication;
 
-var authentication = new ViewerAuthenticationSession();
-using IDisposable registration =
-    ViewerAuthenticationTargetRegistry.Register(
-        "viewer",
-        "Viewer",
-        authentication);
+var session = AuthenticationSession.CreateTransient();
+var identity = new AuthenticationPersistenceIdentity(
+    "service.api-v2",
+    "service.development",
+    "https://api.example.invalid",
+    "unity-editor");
 
-// API requests use the live token, including later replacements.
-IApiAuthProvider apiAuthProvider = authentication.ApiAuthProvider;
+using IDisposable registration = AuthenticationTargetRegistry.Register(
+    "service-authentication",
+    "Service Development",
+    session,
+    acquisitionProvider,
+    validationProvider,
+    identity);
 ```
 
-`ViewerAuthenticationSession` (or its `CreateTransient` factory) uses `SessionService` with an
-`InMemorySessionStore`. Supply an `ISessionRefreshService` to enable refresh
-and automatic refresh-before-API behavior:
+The persistence identity is service/environment/authority/client/account based.
+It must not be derived from a transient window or viewer registration ID.
+
+`AuthenticationSession` composes Deucarian Session and Session API Integration.
+Transient sessions use `InMemorySessionStore`. Integrations that own another
+secure store can supply it through the `ISessionStore` constructor. The same
+session backs API authentication, status, refresh, validation, and clear.
+
+Acquisition and validation profiles are always explicitly assigned:
 
 ```csharp
-var authentication = new ViewerAuthenticationSession(refreshService);
+AuthenticationEndpointProvider acquisition =
+    AuthenticationEndpointProviderFactory.Create(profile, apiClient);
 ```
 
-Without a refresh service, token replacement and clear remain available while
-`CanRefresh` is false. Input may contain an optional `Bearer` prefix; the
-session always stores the normalized token.
+There is no Resources convention, default profile loader, or implicit target.
 
-### Optional runtime connection composition
+## Secure Editor persistence
 
-A backend integration can explicitly register one
-`IViewerRuntimeConnectionProvider`. Generic viewers call
-`ViewerRuntimeConnectionProviderRegistry.Resolve()` while composing:
+Open `Tools > Deucarian > Authentication`.
 
-- `None` means no integration is installed, so the viewer keeps its existing
-  local composition;
-- `Resolved` supplies one stable target/session, the API client backed by that
-  same session, a resolved API base URL, and exact authenticated origins;
-- `Failed` and `Ambiguous` fail closed and must never fall back to a second
-  unauthenticated or differently authenticated client.
+Opt-in remembering writes an encrypted session envelope below
+`Library/Deucarian/Authentication/Sessions`. On Windows, encryption uses the
+OS Current User data-protection facility with per-identity entropy. The envelope
+supports access token, refresh token, and expiry metadata, and is replaced
+atomically. Tokens are never written to `UserSettings`, `ProjectSettings`,
+`EditorPrefs`, `PlayerPrefs`, ScriptableObjects, UI summaries, or logs.
 
-The returned `ViewerRuntimeConnection` is an owned lease and must be disposed
-with the viewer. Providers remain vendor-specific; this package owns only the
-neutral deterministic seam and never discovers implementations by reflection.
-Bearer values are not part of the connection contract, URLs, or payloads.
+The one-time migration recognizes the former ignored plaintext
+`UserSettings/DeucarianViewerAuthenticationSettings.asset`. It retains that
+source if secure storage or identity resolution is unavailable. Only after an
+encrypted save/load round trip exactly matches does it remove the plaintext
+source.
 
-## Configurable endpoint reacquisition
+Restoration is fail-closed. Offline or transient validation failures preserve
+the protected session. Explicit sign-out and confirmed credential rejection
+clear it; closing a viewer or failing a viewer connection does not.
 
-Session API Integration 1.1.1 supplies a credential-free
-`SessionTokenEndpointProfile`. It describes an endpoint, where transient input
-values belong in the request, and the JSON paths that contain the returned
-access token, optional refresh token, and expiry. The profile must never contain
-credential values.
+## Optional viewer integration assembly
 
-Create a profile with:
-
-`Assets > Create > Deucarian > Session > Token Endpoint Profile`
-
-Assign field keys, labels, masking, and request destinations in that asset. Put
-the asset at this conventional Resources path when every viewer should discover
-it without local composition code:
-
-`Assets/Resources/Deucarian/ViewerAuthenticationTokenEndpointProfile.asset`
-
-Then register the generic provider:
-
-```csharp
-ViewerAuthenticationEndpointProvider provider = null;
-ViewerAuthenticationEndpointProviderFactory.TryCreateFromResources(
-    out provider);
-
-var authentication = ViewerAuthenticationSession.CreateTransient();
-using IDisposable registration =
-    ViewerAuthenticationTargetRegistry.Register(
-        "viewer",
-        "Viewer",
-        authentication,
-        provider);
-```
-
-An explicitly assigned asset can instead use
-`ViewerAuthenticationEndpointProviderFactory.Create(profile, apiClient)`.
-Neither factory stores credentials. Interactive values live only for the
-operation and are cleared afterward.
-
-## Commands
-
-`ViewerAuthenticationCommandHandler<THost>` handles:
-
-- `update_access_token`
-- `updateaccesstoken` (legacy alias)
-- `refresh_access_token`
-- `clear_access_token`
-
-The host implements `IViewerAuthenticationHost`. The handler reads its two
-known payload fields explicitly, so its command DTO does not depend on
-reflection or linker preservation. Command results and optional published
-events contain only `ViewerAuthenticationStatusSnapshot`; they never contain
-the token. Command Routing's normal redaction still protects incoming payload
-history.
-
-## Editor workflow
-
-Open:
-
-`Tools > Deucarian > Viewer > Authentication`
-
-In Edit Mode, the window creates an ephemeral, window-owned session directly
-from the conventional Resources profile. It is not registered as a live viewer
-and is discarded when the window closes. In Play Mode, the window uses the
-explicitly registered viewer session. A viewer selector is shown only when more
-than one real configuration is available.
-
-The window opens on one compact connection workspace. It presents the current
-backend host, sanitized connection status, human-readable expiry, and one
-contextual action. Exact routes and less common controls remain available
-without competing with the normal path:
-
-- connection details disclose the exact active origin, sign-in URL, validation
-  URL, and any cross-origin warning;
-- sign-in fields stay collapsed until `Sign in` or `Get new token` is chosen;
-- masked paste-and-replace input is advanced and cleared immediately after use;
-- provider-defined masked or plain transient acquisition fields;
-- sanitized Missing, Active, Expiring, Expired, or Expiry Unknown state;
-- automatic local JWT expiry assessment on open and focus;
-- optional automatic server validation on open and focus;
-- opt-in local remembering, one-click apply, and auto-apply behind a collapsed
-  local-storage disclosure.
-
-The neutral target chip identifies what the package can inspect: `CURRENT` for
-a concrete endpoint set, `CUSTOM` for an opaque provider, or `UNSET` when no
-provider or endpoint exists. It does not infer an environment name from a
-hostname. Explicit environment names and switching are intentionally deferred
-until projects can provide truthful, credential-free environment metadata.
-
-Remembered tokens are stored only in the consuming project's ignored
-`UserSettings` folder. This prevents source-control inclusion, but it is not an
-OS credential vault. Do not enable remembering on a machine whose local Unity
-settings are not appropriately protected. A remembered token is bound to the
-exact stable viewer target ID that acquired it; changing the visible viewer
-selection never reassigns that token.
-
-`Get New Token` reacquires a token through the configured provider. This
-commonly means repeating a sign-in exchange; it does not claim that the backend
-implements a formal refresh-token protocol.
-
-## Optional server validation
-
-Local JWT expiry metadata answers only whether the token's readable `exp` time
-has passed. It does not validate the signature or prove that the server still
-accepts the token. Opaque tokens have no locally verifiable expiry at all.
-
-For an authoritative acceptance check, add a second credential-free
-`SessionTokenEndpointProfile` at:
-
-`Assets/Resources/Deucarian/ViewerAuthenticationTokenValidationEndpointProfile.asset`
-
-Configure it for the backend's validation route, enable **Use Current Access
-Token As Bearer**, and map the successful response's access-token JSON path.
-The shared editor window discovers this profile and checks it automatically on
-open. Refocusing checks again only after the previous result is at least one
-minute old; `Check again` appears after an inconclusive probe. HTTP 401/403 is presented as rejected; transport, server, or
-mapping failures are presented as unable to check. Neither outcome deletes the
-remembered token. Projects with a non-endpoint validation mechanism can instead
-inject `IViewerAuthenticationValidationProvider` when registering a target.
-
-An Editor integration that temporarily owns authentication outside Play Mode
-can hand the existing local token between stable target identities without
-reading the token value:
-
-```csharp
-ViewerAuthenticationRememberedTokenFacade.TryRebindOwner(
-    "legacy-product-target",
-    "package-editor-target");
-```
-
-This owner-only operation succeeds only when local remembering is already
-enabled, a token already exists, and that token belongs to the expected current
-owner. It does not enable persistence or change the token, and an optional
-package cannot blindly claim another target's remembered credential.
-
-## Acquisition providers
-
-Applications can inject `IViewerAuthenticationAcquisitionProvider` when
-registering a target. The provider receives the target `ISessionService` and
-performs a backend-specific login or token acquisition. This package never
-assumes a login endpoint, account shape, or vendor.
-
-Existing providers remain source-compatible. Providers that need shared
-interactive fields additionally implement
-`IInteractiveViewerAuthenticationAcquisitionProvider`. Their descriptors never
-carry values; `ViewerAuthenticationInputValues` is a disposable, short-lived
-value container.
-
-## Editor-only legacy migration and export
-
-`ViewerAuthenticationRememberedTokenFacade.TryMigrateLegacyToken` explicitly
-moves a normalized legacy development token into the consuming project's
-ignored UserSettings, enables local remembering and auto-apply, and reports
-whether persistence succeeded. The legacy source must be cleared only after the
-method returns true.
-
-`ViewerAuthenticationRememberedTokenFacade.TryGet` retrieves that token only
-for the exact stable target id. It exists for local Editor exports such as a
-gitignored WebGL development context. Callers must clear their local reference
-immediately and must never log or preview it. Ordinary `TryImport` remains
-opt-in-only and never enables persistence silently.
-
-## Security invariants
-
-- Tokens are never logged, previewed, copied into status, command results, or
-  outbound authentication events.
-- The package contains no serialized token asset.
-- Registry entries hold session/provider references only.
-- Local remembering is explicit and can be cleared from the window.
+`Deucarian.Authentication.ViewerIntegration` contains the Command Routing
+handlers and the optional `ViewerRuntimeConnectionProviderRegistry` seam. It
+depends one way on `Deucarian.Authentication`; the generic core assembly does
+not reference Command Routing or viewer contracts. Command Routing is not a
+required UPM dependency: Unity enables this adapter assembly through an asmdef
+version define only when `com.deucarian.command-routing` 0.2.4 or newer is
+already installed by the viewer composition.
 
 ## Validation
 
-```powershell
-python C:/Repositories/Package-Registry/Tools/deucarian_package_validator.py --registry-root C:/Repositories/Package-Registry --repository-root . --config deucarian-package.json
-```
-
-Run the package EditMode tests after code or assembly-definition changes and
-run `git diff --check` before committing.
+Run the Package Registry validator, Unity EditMode tests, and
+`git diff --check`. Secure-store tests verify encrypted access/refresh/expiry
+round trips, reopen behavior, and clear semantics without exposing token values.
