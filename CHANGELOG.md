@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.0 - 2026-08-26
+
+- Renamed the package, core assembly, namespace, and public contracts from
+  Viewer Authentication to generic Authentication responsibility names.
+- Isolated Command Routing and runtime-viewer seams in the optional
+  `Deucarian.Authentication.ViewerIntegration` assembly; the generic core has
+  no viewer or Command Routing dependency. The UPM package no longer requires
+  Command Routing; the adapter is enabled only when that package is installed.
+- Replaced plaintext remembered-token `UserSettings` persistence with an
+  atomic platform-protected session store supporting access tokens, refresh
+  tokens, and expiry metadata.
+- Added verified one-time migration of the former plaintext local settings;
+  the old source is removed only after a protected round trip succeeds.
+- Updated the optional viewer adapter to Command Routing 0.2.4 and Session API
+  Integration 1.2.0 for the coordinated API 2.0 release.
+
 ## 0.5.1 - 2026-08-25
 
 - Added a vendor-neutral Editor-session handoff that preserves one authenticated
@@ -85,7 +101,7 @@
 
 ## 0.1.0 - 2026-08-18
 
-- Added generic viewer authentication session composition backed by Deucarian
+- Added generic authentication session composition backed by Deucarian
   Session and Session API Integration.
 - Added sanitized status snapshots, explicit target registration, optional
   acquisition providers, and token lifecycle command handlers.

@@ -1,0 +1,28 @@
+{
+  "name": "Deucarian.Authentication.ViewerIntegration",
+  "rootNamespace": "Deucarian.Authentication.ViewerIntegration",
+  "references": [
+    "Deucarian.API",
+    "Deucarian.Authentication",
+    "Deucarian.CommandRouting",
+    "Deucarian.Session",
+    "Newtonsoft.Json"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [
+    "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
+  ],
+  "versionDefines": [
+    {
+      "name": "com.deucarian.command-routing",
+      "expression": "0.2.4",
+      "define": "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
+    }
+  ],
+  "noEngineReferences": false
+}
