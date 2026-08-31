@@ -50,7 +50,7 @@ There is no Resources convention, default profile loader, or implicit target.
 
 ## Secure Editor persistence
 
-Open `Tools > Deucarian > Authentication`.
+Open **Deucarian Control Center > Connections > Authentication**.
 
 Opt-in remembering writes an encrypted session envelope below
 `Library/Deucarian/Authentication/Sessions`. On Windows, encryption uses the
@@ -76,7 +76,7 @@ handlers and the optional `ViewerRuntimeConnectionProviderRegistry` seam. It
 depends one way on `Deucarian.Authentication`; the generic core assembly does
 not reference Command Routing or viewer contracts. Command Routing is not a
 required UPM dependency: Unity enables this adapter assembly through an asmdef
-version define only when `com.deucarian.command-routing` 0.2.4 or newer is
+version define only when `com.deucarian.command-routing` 0.2.5 or newer is
 already installed by the viewer composition.
 
 ## Validation
