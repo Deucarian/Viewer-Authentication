@@ -2,6 +2,7 @@
   "name": "Deucarian.Authentication.Tests.EditMode",
   "rootNamespace": "Deucarian.Authentication.Tests",
   "references": [
+    "Deucarian.Editor",
     "Deucarian.API",
     "Deucarian.CommandRouting",
     "Deucarian.Session",
@@ -29,7 +30,7 @@
   "versionDefines": [
     {
       "name": "com.deucarian.command-routing",
-      "expression": "0.2.4",
+      "expression": "0.2.5",
       "define": "DEUCARIAN_COMMAND_ROUTING_INSTALLED"
     }
   ],

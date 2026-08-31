@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.authentication",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Deucarian Authentication",
   "description": "Reusable authentication composition, Edit Mode token acquisition, optional server validation, sanitized lifecycle commands, and local-only editor tooling.",
   "unity": "2021.3",
@@ -19,8 +19,8 @@
     "token"
   ],
   "dependencies": {
-    "com.deucarian.api": "2.0.0",
-    "com.deucarian.editor": "1.1.0",
+    "com.deucarian.api": "2.0.1",
+    "com.deucarian.editor": "1.2.0",
     "com.deucarian.session": "1.0.6",
     "com.deucarian.session.api-integration": "1.2.0",
     "com.unity.nuget.newtonsoft-json": "3.2.2"
