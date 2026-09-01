@@ -52,9 +52,10 @@ namespace Deucarian.Authentication.Editor
                 {
                     AuthenticationLocalSettings settings =
                         AuthenticationLocalSettings.instance;
-                    if (settings.HasRememberedAccessTokenFor(target.Id))
+                    if (settings.TryGetRememberedSessionFor(
+                            target,
+                            out SessionData persisted))
                     {
-                        SessionData persisted = settings.RememberedSession;
                         await editModeWorkspace
                             .LoadRememberedSessionForInspectionAsync(
                                  persisted,

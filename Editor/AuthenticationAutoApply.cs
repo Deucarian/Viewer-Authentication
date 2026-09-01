@@ -35,30 +35,43 @@ namespace Deucarian.Authentication.Editor
 
         private static void TryApplyRememberedToken()
         {
-            AuthenticationLocalSettings settings =
-                AuthenticationLocalSettings.instance;
-            if (!settings.AutoApply ||
-                !settings.HasRememberedAccessToken ||
+            _ = TryApplyRememberedTokenAsync(
+                AuthenticationLocalSettings.instance);
+        }
+
+        internal static async Task<bool> TryApplyRememberedTokenAsync(
+            AuthenticationLocalSettings settings)
+        {
+            if (settings == null ||
+                !settings.AutoApply ||
                 !TryResolveTarget(
                     settings,
                     out AuthenticationTarget target))
             {
-                return;
+                return false;
             }
 
             AuthenticationStatus state = target.Session.Status.Status;
             if (state != AuthenticationStatus.Missing &&
                 state != AuthenticationStatus.Expired)
             {
-                return;
+                return false;
             }
 
             if (!Applying.Add(target.Id))
             {
-                return;
+                return false;
             }
 
-            ApplyAsync(target, settings.RememberedSession);
+            if (!settings.TryGetRememberedSessionFor(
+                    target,
+                    out Deucarian.Session.SessionData persistedSession))
+            {
+                Applying.Remove(target.Id);
+                return false;
+            }
+
+            return await ApplyAsync(target, persistedSession);
         }
 
         private static bool TryResolveTarget(
@@ -77,7 +90,7 @@ namespace Deucarian.Authentication.Editor
             return false;
         }
 
-        private static async void ApplyAsync(
+        private static async Task<bool> ApplyAsync(
             AuthenticationTarget target,
             Deucarian.Session.SessionData persistedSession)
         {
@@ -85,9 +98,12 @@ namespace Deucarian.Authentication.Editor
             {
                 if (persistedSession != null)
                 {
-                    await target.Session.ApplyPersistedSessionAsync(
-                        persistedSession,
-                        CancellationToken.None);
+                    Deucarian.Session.SessionResult result =
+                        await target.Session.ApplyPersistedSessionAsync(
+                            persistedSession,
+                            CancellationToken.None);
+                    return result?.Succeeded == true &&
+                           target.Session.Status.HasAccessToken;
                 }
             }
             catch (Exception)
@@ -100,6 +116,8 @@ namespace Deucarian.Authentication.Editor
                 Applying.Remove(target.Id);
                 persistedSession = null;
             }
+
+            return false;
         }
     }
 }
