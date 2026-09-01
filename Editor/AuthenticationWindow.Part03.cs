@@ -161,7 +161,7 @@ namespace Deucarian.Authentication.Editor
             AuthenticationLocalSettings settings =
                 AuthenticationLocalSettings.instance;
             bool rememberedForTarget = target != null &&
-                settings.HasRememberedAccessTokenFor(target.Id);
+                settings.HasRememberedAccessTokenFor(target);
             GUILayout.Space(DeucarianEditorSpacing.Small);
             EditorGUILayout.HelpBox(
                 "Opt-in storage encrypts the session for the current OS " +
@@ -214,17 +214,21 @@ namespace Deucarian.Authentication.Editor
                         !assessment.IsInProgress(target.Id),
                         GUILayout.ExpandWidth(true)))
                 {
-                    SessionData rememberedSession = settings.RememberedSession;
-                    RunOperation(
-                        target,
-                        cancellationToken =>
-                            target.Session.ApplyPersistedSessionAsync(
-                                rememberedSession,
-                                cancellationToken),
-                        "Remembered token applied.",
-                        rememberOnSuccess: false,
-                        clearRememberedOnSuccess: false);
-                    rememberedSession = null;
+                    if (settings.TryGetRememberedSessionFor(
+                            target,
+                            out SessionData rememberedSession))
+                    {
+                        RunOperation(
+                            target,
+                            cancellationToken =>
+                                target.Session.ApplyPersistedSessionAsync(
+                                    rememberedSession,
+                                    cancellationToken),
+                            "Remembered token applied.",
+                            rememberOnSuccess: false,
+                            clearRememberedOnSuccess: false);
+                        rememberedSession = null;
+                    }
                 }
 
                 if (DeucarianEditorButtons.Secondary(
@@ -250,7 +254,7 @@ namespace Deucarian.Authentication.Editor
             }
 
             return target == null ||
-                   settings.HasRememberedAccessTokenFor(target.Id)
+                   settings.HasRememberedAccessTokenFor(target)
                 ? "On · token saved"
                 : "On · saved for another target";
         }

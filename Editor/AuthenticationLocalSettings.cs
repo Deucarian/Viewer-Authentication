@@ -8,7 +8,7 @@ namespace Deucarian.Authentication.Editor
     [FilePath(
         "UserSettings/DeucarianAuthenticationSettings.asset",
         FilePathAttribute.Location.ProjectFolder)]
-    internal sealed class AuthenticationLocalSettings :
+    internal sealed partial class AuthenticationLocalSettings :
         ScriptableSingleton<AuthenticationLocalSettings>
     {
         [SerializeField] private string selectedTargetId = string.Empty;
@@ -20,6 +20,16 @@ namespace Deucarian.Authentication.Editor
         [SerializeField] private string persistedAuthority = string.Empty;
         [SerializeField] private string persistedClientId = string.Empty;
         [SerializeField] private string persistedAccountId = string.Empty;
+        [SerializeField]
+        private string persistedConfigurationFingerprint = string.Empty;
+
+        [NonSerialized]
+        private Func<
+            AuthenticationPersistenceIdentity,
+            AuthenticationSecureSessionStore> secureStoreFactory;
+
+        [NonSerialized]
+        private Action persistOverride;
 
         internal string SelectedTargetId => selectedTargetId ?? string.Empty;
         internal bool RememberAccessToken => rememberAccessToken;
@@ -44,40 +54,50 @@ namespace Deucarian.Authentication.Editor
             }
         }
 
-        internal string RememberedAccessToken
+        internal bool TryGetRememberedAccessTokenFor(
+            string targetId,
+            out string accessToken)
         {
-            get
+            accessToken = null;
+            if (!TryResolveTarget(targetId, out AuthenticationTarget target) ||
+                !TryLoadFor(target, out SessionData session))
             {
-                if (!TryLoad(out SessionData session))
-                {
-                    return null;
-                }
-
-                return session.AccessToken;
+                return false;
             }
+
+            accessToken = session.AccessToken;
+            return !string.IsNullOrWhiteSpace(accessToken);
         }
 
-        internal SessionData RememberedSession
+        internal bool TryGetRememberedSessionFor(
+            AuthenticationTarget target,
+            out SessionData session)
         {
-            get
-            {
-                TryLoad(out SessionData session);
-                return session;
-            }
+            return TryLoadFor(target, out session);
         }
 
         internal bool HasRememberedAccessTokenFor(string targetId)
         {
-            return HasRememberedAccessToken &&
+            return TryResolveTarget(targetId, out AuthenticationTarget target) &&
+                   HasRememberedAccessTokenFor(target);
+        }
+
+        internal bool HasRememberedAccessTokenFor(
+            AuthenticationTarget target)
+        {
+            return TryCreatePersistedIdentity(
+                       out AuthenticationPersistenceIdentity identity) &&
                    AuthenticationRememberedTokenBinding.Matches(
                        persistedTargetId,
-                       targetId);
+                       identity,
+                       target) &&
+                   HasRememberedAccessToken;
         }
 
         internal void SetSelectedTarget(string targetId)
         {
             selectedTargetId = targetId ?? string.Empty;
-            Save(true);
+            PersistSettings();
         }
 
         internal void SetRememberAccessToken(bool value)
@@ -90,13 +110,13 @@ namespace Deucarian.Authentication.Editor
                 return;
             }
 
-            Save(true);
+            PersistSettings();
         }
 
         internal void SetAutoApply(bool value)
         {
             autoApply = rememberAccessToken && value;
-            Save(true);
+            PersistSettings();
         }
 
         internal bool RememberToken(string targetId, string accessToken)
@@ -172,16 +192,21 @@ namespace Deucarian.Authentication.Editor
                     expectedCurrentTargetId,
                     targetId,
                     HasRememberedAccessToken,
-                    out _) ||
-                !TryLoad(out SessionData session))
+                    out string reboundOwnerId) ||
+                !TryCreatePersistedIdentity(
+                    out AuthenticationPersistenceIdentity persistedIdentity) ||
+                !TryResolveTarget(targetId, out AuthenticationTarget target) ||
+                !AuthenticationRememberedTokenBinding.IdentityMatches(
+                    persistedIdentity,
+                    target.PersistenceIdentity))
             {
                 return false;
             }
 
-            string token = session.AccessToken;
-            bool migrated = RememberToken(targetId, token);
-            token = null;
-            return migrated;
+            persistedTargetId = reboundOwnerId;
+            selectedTargetId = reboundOwnerId;
+            PersistSettings();
+            return true;
         }
 
         internal void ClearRememberedToken()
@@ -204,7 +229,26 @@ namespace Deucarian.Authentication.Editor
             persistedAuthority = string.Empty;
             persistedClientId = string.Empty;
             persistedAccountId = string.Empty;
-            Save(true);
+            persistedConfigurationFingerprint = string.Empty;
+            PersistSettings();
+        }
+
+        private bool TryLoadFor(
+            AuthenticationTarget target,
+            out SessionData session)
+        {
+            session = null;
+            if (!TryCreatePersistedIdentity(
+                    out AuthenticationPersistenceIdentity identity) ||
+                !AuthenticationRememberedTokenBinding.Matches(
+                    persistedTargetId,
+                    identity,
+                    target))
+            {
+                return false;
+            }
+
+            return TryLoad(out session);
         }
 
         private bool TryLoad(out SessionData session)
@@ -236,7 +280,7 @@ namespace Deucarian.Authentication.Editor
         {
             try
             {
-                var store = new AuthenticationSecureSessionStore(identity);
+                AuthenticationSecureSessionStore store = CreateStore(identity);
                 store.SaveAsync(session).GetAwaiter().GetResult();
                 SessionData verified = store.LoadAsync()
                     .GetAwaiter()
@@ -247,7 +291,7 @@ namespace Deucarian.Authentication.Editor
                 }
 
                 CaptureIdentity(targetId, identity);
-                Save(true);
+                PersistSettings();
                 return true;
             }
             catch
@@ -262,17 +306,66 @@ namespace Deucarian.Authentication.Editor
             store = null;
             try
             {
-                var identity = new AuthenticationPersistenceIdentity(
-                    persistedServiceId,
-                    persistedEnvironmentId,
-                    persistedAuthority,
-                    persistedClientId,
-                    persistedAccountId);
-                store = new AuthenticationSecureSessionStore(identity);
+                if (!TryCreatePersistedIdentity(
+                        out AuthenticationPersistenceIdentity identity))
+                {
+                    return false;
+                }
+
+                store = CreateStore(identity);
                 return true;
             }
             catch
             {
+                return false;
+            }
+        }
+
+        private AuthenticationSecureSessionStore CreateStore(
+            AuthenticationPersistenceIdentity identity)
+        {
+            return secureStoreFactory != null
+                ? secureStoreFactory(identity)
+                : new AuthenticationSecureSessionStore(identity);
+        }
+
+        private void PersistSettings()
+        {
+            if (persistOverride != null)
+            {
+                persistOverride();
+                return;
+            }
+
+            Save(true);
+        }
+
+        private bool TryCreatePersistedIdentity(
+            out AuthenticationPersistenceIdentity identity)
+        {
+            identity = null;
+            try
+            {
+                identity = string.IsNullOrWhiteSpace(
+                        persistedConfigurationFingerprint)
+                    ? new AuthenticationPersistenceIdentity(
+                        persistedServiceId,
+                        persistedEnvironmentId,
+                        persistedAuthority,
+                        persistedClientId,
+                        persistedAccountId)
+                    : new AuthenticationPersistenceIdentity(
+                        persistedServiceId,
+                        persistedEnvironmentId,
+                        persistedAuthority,
+                        persistedClientId,
+                        persistedAccountId,
+                        persistedConfigurationFingerprint);
+                return true;
+            }
+            catch
+            {
+                identity = null;
                 return false;
             }
         }
@@ -289,6 +382,17 @@ namespace Deucarian.Authentication.Editor
                    (identity = target.PersistenceIdentity) != null;
         }
 
+        private static bool TryResolveTarget(
+            string targetId,
+            out AuthenticationTarget target)
+        {
+            target = null;
+            return !string.IsNullOrWhiteSpace(targetId) &&
+                   AuthenticationTargetRegistry.TryGet(
+                       targetId.Trim(),
+                       out target);
+        }
+
         private void CaptureIdentity(
             string targetId,
             AuthenticationPersistenceIdentity identity)
@@ -300,6 +404,8 @@ namespace Deucarian.Authentication.Editor
             persistedAuthority = identity.Authority;
             persistedClientId = identity.ClientId;
             persistedAccountId = identity.AccountId;
+            persistedConfigurationFingerprint =
+                identity.ConfigurationFingerprint;
         }
     }
 
@@ -328,6 +434,27 @@ namespace Deucarian.Authentication.Editor
                        ownerId.Trim(),
                        targetId.Trim(),
                        StringComparison.Ordinal);
+        }
+
+        internal static bool Matches(
+            string ownerId,
+            AuthenticationPersistenceIdentity persistedIdentity,
+            AuthenticationTarget target)
+        {
+            return target != null &&
+                   Matches(ownerId, target.Id) &&
+                   IdentityMatches(
+                       persistedIdentity,
+                       target.PersistenceIdentity);
+        }
+
+        internal static bool IdentityMatches(
+            AuthenticationPersistenceIdentity persistedIdentity,
+            AuthenticationPersistenceIdentity currentIdentity)
+        {
+            return persistedIdentity != null &&
+                   currentIdentity != null &&
+                   persistedIdentity.Equals(currentIdentity);
         }
 
         internal static bool TryRebindOwner(

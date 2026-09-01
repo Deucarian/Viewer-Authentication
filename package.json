@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.authentication",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "Deucarian Authentication",
   "description": "Reusable authentication composition, Edit Mode token acquisition, optional server validation, sanitized lifecycle commands, and local-only editor tooling.",
   "unity": "2021.3",

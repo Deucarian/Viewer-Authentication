@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.2 - 2026-09-01
+
+- Bound remembered Editor sessions to the exact current persistence identity
+  before automatic, manual, inspection, facade-based restoration, or target-ID
+  owner rebinding.
+- Added a source-compatible full-composition fingerprint identity overload so
+  host, endpoint-catalog, secondary-client, and policy changes fail closed.
+- Preserved the legacy identity constructor and stable storage key for existing
+  integrations that do not yet supply a composition fingerprint.
+- Existing Viewer remembered sessions predate the composition fingerprint and
+  intentionally do not auto-restore after this upgrade; sign in once to bind a
+  new protected session to the complete current composition.
+
 ## 1.0.1 - 2026-08-31
 
 - Registered the package workflow and a bounded, sanitized local-state card with Deucarian Control Center.
