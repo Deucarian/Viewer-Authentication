@@ -86,5 +86,100 @@ namespace Deucarian.Authentication.Tests
 
             Assert.That(rebound, Is.False);
         }
+
+        [Test]
+        public void ExactIdentityMatchesARecreatedTargetAfterDomainReload()
+        {
+            AuthenticationPersistenceIdentity persistedIdentity =
+                CreateIdentity(CompositionFingerprintA);
+            AuthenticationTarget recreatedTarget = CreateTarget(
+                "simultria-viewer",
+                CreateIdentity(CompositionFingerprintA));
+
+            Assert.That(
+                AuthenticationRememberedTokenBinding.Matches(
+                    "simultria-viewer",
+                    persistedIdentity,
+                    recreatedTarget),
+                Is.True);
+        }
+
+        [TestCase(CompositionFingerprintCatalogChanged)]
+        [TestCase(CompositionFingerprintSecondaryClientChanged)]
+        [TestCase(CompositionFingerprintPolicyChanged)]
+        public void SameTargetCannotRestoreAfterFullCompositionChanges(
+            string currentCompositionFingerprint)
+        {
+            AuthenticationPersistenceIdentity persistedIdentity =
+                CreateIdentity(CompositionFingerprintA);
+            AuthenticationTarget currentTarget = CreateTarget(
+                "simultria-viewer",
+                CreateIdentity(currentCompositionFingerprint));
+
+            Assert.That(
+                AuthenticationRememberedTokenBinding.Matches(
+                    "simultria-viewer",
+                    persistedIdentity,
+                    currentTarget),
+                Is.False);
+        }
+
+        [Test]
+        public void ExactIdentityStillRequiresTheRememberedTargetOwner()
+        {
+            AuthenticationPersistenceIdentity identity =
+                CreateIdentity(CompositionFingerprintA);
+
+            Assert.That(
+                AuthenticationRememberedTokenBinding.Matches(
+                    "another-viewer",
+                    identity,
+                    CreateTarget("simultria-viewer", identity)),
+                Is.False);
+        }
+
+        [Test]
+        public void OwnerRebindCannotCrossACompositionIdentityChange()
+        {
+            Assert.That(
+                AuthenticationRememberedTokenBinding.IdentityMatches(
+                    CreateIdentity(CompositionFingerprintA),
+                    CreateIdentity(CompositionFingerprintCatalogChanged)),
+                Is.False);
+        }
+
+        private const string CompositionFingerprintA =
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        private const string CompositionFingerprintCatalogChanged =
+            "baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        private const string CompositionFingerprintSecondaryClientChanged =
+            "caaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        private const string CompositionFingerprintPolicyChanged =
+            "daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+        private static AuthenticationPersistenceIdentity CreateIdentity(
+            string configurationFingerprint)
+        {
+            return new AuthenticationPersistenceIdentity(
+                "simultria.api-v2",
+                "simultria.development",
+                "https://api.example.invalid",
+                "primary",
+                null,
+                configurationFingerprint);
+        }
+
+        private static AuthenticationTarget CreateTarget(
+            string targetId,
+            AuthenticationPersistenceIdentity identity)
+        {
+            return new AuthenticationTarget(
+                targetId,
+                "Test Viewer",
+                AuthenticationSession.CreateTransient(),
+                null,
+                null,
+                identity);
+        }
     }
 }

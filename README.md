@@ -7,8 +7,7 @@ Command Routing dependency.
 
 ## Install
 
-Install the package through the Deucarian Package Installer or pin the required
-feature commit while this breaking migration is under review.
+Install the package through the Deucarian Package Installer.
 
 ## Runtime composition
 
@@ -16,11 +15,14 @@ feature commit while this breaking migration is under review.
 using Deucarian.Authentication;
 
 var session = AuthenticationSession.CreateTransient();
+string compositionFingerprint = CreateCredentialFreeCompositionFingerprint();
 var identity = new AuthenticationPersistenceIdentity(
     "service.api-v2",
     "service.development",
     "https://api.example.invalid",
-    "unity-editor");
+    "unity-editor",
+    accountId: null,
+    configurationFingerprint: compositionFingerprint);
 
 using IDisposable registration = AuthenticationTargetRegistry.Register(
     "service-authentication",
@@ -32,7 +34,13 @@ using IDisposable registration = AuthenticationTargetRegistry.Register(
 ```
 
 The persistence identity is service/environment/authority/client/account based.
-It must not be derived from a transient window or viewer registration ID.
+Integrations that compose multiple clients, routes, hosts, or policies must also
+pass a stable credential-free digest through `configurationFingerprint`. The
+digest must change whenever any selected backend input changes; never pass raw
+hosts, headers, routes, credentials, or configuration payloads. The original
+four/five-argument constructor remains source-compatible for simpler legacy
+integrations. Persistence identity must not be derived from a transient window
+or viewer registration ID.
 
 `AuthenticationSession` composes Deucarian Session and Session API Integration.
 Transient sessions use `InMemorySessionStore`. Integrations that own another
@@ -68,6 +76,10 @@ source.
 Restoration is fail-closed. Offline or transient validation failures preserve
 the protected session. Explicit sign-out and confirmed credential rejection
 clear it; closing a viewer or failing a viewer connection does not.
+Automatic apply, manual apply, inspection, and Editor facade retrieval require
+the remembered target owner and complete current persistence identity to match.
+Recreating an unchanged target after a domain reload restores normally; changing
+the full-composition fingerprint cannot restore the previous bearer.
 
 ## Optional viewer integration assembly
 
