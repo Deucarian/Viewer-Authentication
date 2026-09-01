@@ -157,7 +157,7 @@ namespace Deucarian.Authentication.Editor
                     await target.Session.ClearAsync(cancellationToken);
                     AuthenticationLocalSettings settings =
                         AuthenticationLocalSettings.instance;
-                    if (settings.HasRememberedAccessTokenFor(target.Id))
+                    if (settings.HasRememberedAccessTokenFor(target))
                     {
                         settings.ClearRememberedToken();
                     }

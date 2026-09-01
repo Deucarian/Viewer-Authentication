@@ -81,23 +81,36 @@ namespace Deucarian.Authentication.Editor
             string targetId,
             out string accessToken)
         {
+            return TryGet(
+                AuthenticationLocalSettings.instance,
+                targetId,
+                out accessToken);
+        }
+
+        internal static bool TryGet(
+            AuthenticationLocalSettings settings,
+            string targetId,
+            out string accessToken)
+        {
             accessToken = null;
-            AuthenticationLocalSettings settings =
-                AuthenticationLocalSettings.instance;
             if (string.IsNullOrWhiteSpace(targetId) ||
-                !settings.HasRememberedAccessTokenFor(targetId))
+                settings == null ||
+                !settings.TryGetRememberedAccessTokenFor(
+                    targetId,
+                    out accessToken))
             {
                 return false;
             }
 
-            accessToken = settings.RememberedAccessToken;
-            return !string.IsNullOrWhiteSpace(accessToken);
+            return true;
         }
 
         /// <summary>
         /// Rebinds an existing remembered token to another stable target ID
-        /// without exposing or replacing the token value. This does not enable
-        /// local remembering and returns false when no token is remembered.
+        /// only when the replacement target has the exact same persistence
+        /// identity. The operation never exposes or replaces the token value.
+        /// It does not enable local remembering and returns false when no token
+        /// is remembered or the identity changed.
         /// </summary>
         public static bool TryRebindOwner(
             string expectedCurrentTargetId,
