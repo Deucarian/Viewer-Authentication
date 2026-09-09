@@ -13,14 +13,8 @@ namespace Deucarian.Authentication.Editor
     {
 
 
-        public static void Open()
-        {
-            AuthenticationWindow window =
-                GetWindow<AuthenticationWindow>(
-                    "Authentication");
-            window.minSize = new Vector2(400f, 460f);
-            window.Focus();
-        }
+        public static void Open() =>
+            DeucarianEditorWindowPages.ShowStandalone<AuthenticationWindow>("Authentication", new Vector2(400f, 460f));
 
         private void OnEnable()
         {
@@ -36,7 +30,7 @@ namespace Deucarian.Authentication.Editor
             nextStatusRepaintAt = EditorApplication.timeSinceStartup;
         }
 
-        private void OnFocus()
+        internal void OnFocus()
         {
             if (!windowEnabled)
             {
@@ -128,7 +122,7 @@ namespace Deucarian.Authentication.Editor
                 Application.productName);
         }
 
-        private void OnGUI()
+        internal void OnGUI()
         {
             DeucarianEditorWindowChrome.DrawImGuiWindowBackground(position);
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
