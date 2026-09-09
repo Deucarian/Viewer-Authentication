@@ -30,7 +30,7 @@ namespace Deucarian.Authentication.Editor
             nextStatusRepaintAt = EditorApplication.timeSinceStartup;
         }
 
-        private void OnFocus()
+        internal void OnFocus()
         {
             if (!windowEnabled)
             {
