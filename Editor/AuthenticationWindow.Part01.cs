@@ -199,7 +199,7 @@ namespace Deucarian.Authentication.Editor
                 "Configuration",
                 () =>
                 {
-                    int nextIndex = EditorGUILayout.Popup(
+                    int nextIndex = DeucarianEditorInputGUI.Popup(
                         "Target",
                         selectedIndex,
                         displayNames);

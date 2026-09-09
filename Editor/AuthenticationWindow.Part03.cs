@@ -37,8 +37,8 @@ namespace Deucarian.Authentication.Editor
                         string current =
                             interactiveInputs.GetValue(descriptor.Key);
                         string next = descriptor.IsSecret
-                            ? EditorGUILayout.PasswordField(current)
-                            : EditorGUILayout.TextField(current);
+                            ? DeucarianEditorInputGUI.PasswordField(current)
+                            : DeucarianEditorInputGUI.TextField(current);
                         interactiveInputs.SetValue(descriptor.Key, next);
                     },
                     descriptor.Description);
@@ -90,7 +90,7 @@ namespace Deucarian.Authentication.Editor
             DeucarianEditorFieldRow.Draw(
                 "Access token",
                 () => replacementToken =
-                    EditorGUILayout.PasswordField(replacementToken),
+                    DeucarianEditorInputGUI.PasswordField(replacementToken),
                 "Raw token or a Bearer-prefixed value. Cleared immediately after submission.");
 
             using (new EditorGUILayout.HorizontalScope())
@@ -163,7 +163,7 @@ namespace Deucarian.Authentication.Editor
             bool rememberedForTarget = target != null &&
                 settings.HasRememberedAccessTokenFor(target);
             GUILayout.Space(DeucarianEditorSpacing.Small);
-            EditorGUILayout.HelpBox(
+            DeucarianEditorTextGUI.HelpBox(
                 "Opt-in storage encrypts the session for the current OS " +
                 "account. Raw tokens are never written to Unity settings.",
                 MessageType.Info);
@@ -180,7 +180,7 @@ namespace Deucarian.Authentication.Editor
             bool autoApply = settings.AutoApply;
             DeucarianEditorFieldRow.Draw(
                 "Auto-apply when missing",
-                () => autoApply = EditorGUILayout.Toggle(autoApply),
+                () => autoApply = DeucarianEditorInputGUI.Toggle(autoApply),
                 "Restores the protected session when its target starts.",
                 enabled: remember);
             if (remember && autoApply != settings.AutoApply)
@@ -190,7 +190,7 @@ namespace Deucarian.Authentication.Editor
 
             DeucarianEditorFieldRow.Draw(
                 "Stored token",
-                () => EditorGUILayout.LabelField(
+                () => DeucarianEditorTextGUI.LabelField(
                     settings.HasRememberedAccessToken
                         ? target == null || rememberedForTarget
                             ? "Present (hidden)"
@@ -263,7 +263,7 @@ namespace Deucarian.Authentication.Editor
         {
             DeucarianEditorCards.DrawCard(
                 "Authentication session is starting",
-                () => EditorGUILayout.HelpBox(
+                () => DeucarianEditorTextGUI.HelpBox(
                     "No live authentication session is registered yet. Configure a service integration and wait for it to register its target.",
                     MessageType.Info));
         }
@@ -273,14 +273,14 @@ namespace Deucarian.Authentication.Editor
             if (operationInProgress)
             {
                 GUILayout.Space(DeucarianEditorSpacing.Small);
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     "Authentication operation in progress...",
                     MessageType.Info);
             }
             else if (!string.IsNullOrWhiteSpace(operationMessage))
             {
                 GUILayout.Space(DeucarianEditorSpacing.Small);
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     operationMessage,
                     operationFailed
                         ? MessageType.Warning
