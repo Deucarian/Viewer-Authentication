@@ -76,10 +76,10 @@ namespace Deucarian.Authentication.Editor
             }
 
             GUILayout.Space(DeucarianEditorSpacing.Small);
-            EditorGUILayout.LabelField(
+            DeucarianEditorTextGUI.LabelField(
                 presentation.TargetLabel,
                 CreateOverviewTargetStyle());
-            EditorGUILayout.LabelField(
+            DeucarianEditorTextGUI.LabelField(
                 presentation.ExpiryLabel + "  ·  " +
                 presentation.StatusDetail,
                 CreateOverviewDetailStyle(),
@@ -87,7 +87,7 @@ namespace Deucarian.Authentication.Editor
 
             if (endpoints.HasDifferentOrigins)
             {
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     "Sign-in and token-check routes point to different " +
                     "backend targets. Verify that this is intentional.",
                     MessageType.Warning);
@@ -154,7 +154,7 @@ namespace Deucarian.Authentication.Editor
             GUILayout.Space(DeucarianEditorSpacing.Small);
             if (!summary.HasAnyEndpoint)
             {
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     hasAnyProvider
                         ? "The configured authentication provider does not " +
                           "expose endpoint details."
@@ -199,10 +199,10 @@ namespace Deucarian.Authentication.Editor
 
             DeucarianEditorFieldRow.Draw(
                 "Target",
-                () => EditorGUILayout.LabelField(target.DisplayName));
+                () => DeucarianEditorTextGUI.LabelField(target.DisplayName));
             DeucarianEditorFieldRow.Draw(
                 "Verification",
-                () => EditorGUILayout.LabelField(
+                () => DeucarianEditorTextGUI.LabelField(
                     ResolveValidationLabel(
                         validationProvider,
                         validation,
@@ -211,13 +211,13 @@ namespace Deucarian.Authentication.Editor
             {
                 DeucarianEditorFieldRow.Draw(
                     "Last checked",
-                    () => EditorGUILayout.LabelField(
+                    () => DeucarianEditorTextGUI.LabelField(
                         validation.CheckedAtUtc.ToLocalTime().ToString("u")));
             }
 
             if (summary.HasAnyEndpoint)
             {
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     "This project currently uses fixed endpoint profiles. " +
                     "Environment switching is not enabled yet.",
                     MessageType.None);
@@ -235,7 +235,7 @@ namespace Deucarian.Authentication.Editor
             GUILayout.Space(DeucarianEditorSpacing.Small);
             if (provider == null)
             {
-                EditorGUILayout.HelpBox(
+                DeucarianEditorTextGUI.HelpBox(
                     "No sign-in endpoint profile is configured. Use manual " +
                     "token entry below instead.",
                     MessageType.Info);
@@ -275,7 +275,7 @@ namespace Deucarian.Authentication.Editor
                 }
             }
 
-            EditorGUILayout.LabelField(
+            DeucarianEditorTextGUI.LabelField(
                 provider is AuthenticationEndpointProvider
                     ? "This signs in again through the configured endpoint; " +
                       "it does not assume a refresh-token route."
@@ -291,14 +291,14 @@ namespace Deucarian.Authentication.Editor
             string summary)
         {
             GUILayout.Space(DeucarianEditorSpacing.Small);
-            bool next = EditorGUILayout.Foldout(
+            bool next = DeucarianEditorInputGUI.Foldout(
                 expanded,
                 title,
                 true,
                 CreateDisclosureStyle());
             if (!string.IsNullOrWhiteSpace(summary))
             {
-                EditorGUILayout.LabelField(
+                DeucarianEditorTextGUI.LabelField(
                     summary,
                     DeucarianEditorStyles.MutedLabel);
             }
@@ -322,7 +322,7 @@ namespace Deucarian.Authentication.Editor
 
         private static GUIStyle CreateOverviewTargetStyle()
         {
-            var style = new GUIStyle(EditorStyles.boldLabel)
+            var style = new GUIStyle(DeucarianEditorWorkbenchGUI.BoldLabelStyle)
             {
                 fontSize = 15,
                 fontStyle = FontStyle.Bold,
@@ -342,7 +342,7 @@ namespace Deucarian.Authentication.Editor
 
         private static GUIStyle CreateDisclosureStyle()
         {
-            var style = new GUIStyle(EditorStyles.foldout)
+            var style = new GUIStyle(DeucarianEditorWorkbenchGUI.FoldoutStyle)
             {
                 fontSize = 12,
                 fontStyle = FontStyle.Bold
@@ -373,8 +373,8 @@ namespace Deucarian.Authentication.Editor
         private void DrawEndpointValue(string label, string value)
         {
             GUILayout.Space(DeucarianEditorSpacing.Tiny);
-            EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
-            var style = new GUIStyle(EditorStyles.textArea)
+            DeucarianEditorTextGUI.LabelField(label, DeucarianEditorWorkbenchGUI.RowTitleStyle);
+            var style = new GUIStyle(DeucarianEditorWorkbenchGUI.InputStyles.TextArea)
             {
                 wordWrap = true
             };
