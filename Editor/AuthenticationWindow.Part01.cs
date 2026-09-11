@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Deucarian.Editor;
 using Deucarian.Session;
 using UnityEditor;
@@ -11,10 +9,22 @@ namespace Deucarian.Authentication.Editor
 {
     public sealed partial class AuthenticationWindow
     {
+        public static void Open() => DeucarianEditorToolWindow.Open(DeucarianToolIds.Authentication);
+        public static IDeucarianEditorPage CreatePage() => DeucarianEditorWindowPages.Create<AuthenticationWindow>(
+            (window, root) => window.BuildPage(root), activate: (window, _) => { window.OnFocus(); window.nativePage?.Activate(); },
+            deactivate: window => { window.ResetAuthenticationContext(); window.nativePage?.ClearSensitiveFields(); },
+            update: window => window.nativePage?.Update());
 
-
-        public static void Open() =>
-            DeucarianEditorWindowPages.ShowStandalone<AuthenticationWindow>("Authentication", new Vector2(400f, 460f));
+        private void CreateGUI()
+        {
+            pageSession?.Dispose();
+            pageSession = new DeucarianEditorPageSession(this, DeucarianToolIds.Authentication, BuildPage);
+        }
+        private void BuildPage(UnityEngine.UIElements.VisualElement root)
+        {
+            nativePage?.Dispose();
+            nativePage = new AuthenticationPage(root, this);
+        }
 
         private void OnEnable()
         {
@@ -57,6 +67,8 @@ namespace Deucarian.Authentication.Editor
         private void OnDisable()
         {
             windowEnabled = false;
+            pageSession?.Dispose(); pageSession = null;
+            nativePage?.Dispose(); nativePage = null;
             EditorApplication.delayCall -= RunScheduledAssessment;
             AuthenticationTargetRegistry.RegistrationsChanged -=
                 OnTargetRegistrationsChanged;
@@ -122,50 +134,6 @@ namespace Deucarian.Authentication.Editor
                 Application.productName);
         }
 
-        internal void OnGUI()
-        {
-            DeucarianEditorWindowChrome.DrawImGuiWindowBackground(position);
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            GUILayout.Space(DeucarianEditorSpacing.Small);
-
-            DeucarianEditorChrome.DrawPackageHeader(
-                "Authentication",
-                "Connect a registered service. Token values stay hidden.",
-                DeucarianEditorIcons.GetPackageIcon("authentication"));
-
-            IReadOnlyList<AuthenticationTarget> targets =
-                ResolveAvailableTargets();
-            if (targets.Count == 0)
-            {
-                DrawUnavailableState();
-                DrawStandaloneLocalStorage(null);
-                DrawFooter();
-                EditorGUILayout.EndScrollView();
-                return;
-            }
-
-            int selectedIndex = AuthenticationMenuModel
-                .ResolveSelectedIndex(
-                    targets,
-                    AuthenticationLocalSettings.instance
-                        .SelectedTargetId);
-            selectedIndex = Math.Max(0, selectedIndex);
-            PersistSelectedTargetIfNeeded(targets[selectedIndex]);
-
-            if (AuthenticationMenuModel
-                .ShouldShowConfigurationSelector(targets.Count))
-            {
-                selectedIndex = DrawConfigurationSelector(
-                    targets,
-                    selectedIndex);
-            }
-
-            AuthenticationTarget target = targets[selectedIndex];
-            DrawAuthenticationWorkspace(target);
-            DrawFooter();
-            EditorGUILayout.EndScrollView();
-        }
-
         private IReadOnlyList<AuthenticationTarget>
             ResolveAvailableTargets()
         {
@@ -183,39 +151,6 @@ namespace Deucarian.Authentication.Editor
             }
 
             return Array.Empty<AuthenticationTarget>();
-        }
-
-        private int DrawConfigurationSelector(
-            IReadOnlyList<AuthenticationTarget> targets,
-            int selectedIndex)
-        {
-            string[] displayNames = new string[targets.Count];
-            for (int i = 0; i < targets.Count; i++)
-            {
-                displayNames[i] = targets[i].DisplayName;
-            }
-
-            DeucarianEditorCards.DrawCard(
-                "Configuration",
-                () =>
-                {
-                    int nextIndex = EditorGUILayout.Popup(
-                        "Target",
-                        selectedIndex,
-                        displayNames);
-                    if (nextIndex != selectedIndex)
-                    {
-                        assessment.Clear(targets[selectedIndex].Id);
-                        selectedIndex = nextIndex;
-                        AuthenticationLocalSettings.instance
-                            .SetSelectedTarget(targets[selectedIndex].Id);
-                        ResetAuthenticationContext();
-                        GUI.FocusControl(null);
-                        ScheduleAutomaticAssessment();
-                    }
-                },
-                "Only shown because more than one live authentication configuration is available.");
-            return selectedIndex;
         }
 
         private void ClearTransientWorkspaceState()
@@ -238,161 +173,6 @@ namespace Deucarian.Authentication.Editor
             operationFailed = false;
             assessment.ClearAll();
             ClearTransientWorkspaceState();
-        }
-
-        private void DrawAuthenticationWorkspace(
-            AuthenticationTarget target)
-        {
-            AuthenticationStatusSnapshot status = target.Session.Status;
-            IAuthenticationAcquisitionProvider acquisitionProvider =
-                ResolveAcquisitionProvider(target);
-            IInteractiveAuthenticationAcquisitionProvider
-                interactiveProvider = acquisitionProvider as
-                    IInteractiveAuthenticationAcquisitionProvider;
-            IReadOnlyList<AuthenticationInputDescriptor> descriptors =
-                interactiveProvider?.InputDescriptors;
-            IAuthenticationValidationProvider validationProvider =
-                ResolveValidationProvider(target);
-            assessment.TryGetSnapshot(
-                target,
-                out AuthenticationAssessmentSnapshot validation);
-            bool checking = assessment.IsInProgress(target.Id);
-            bool requiredValuesPresent = interactiveProvider == null ||
-                interactiveInputs.HasRequiredValues(descriptors);
-            AuthenticationEndpointTargetSummary endpoints =
-                ResolveEndpointSummary(target);
-            AuthenticationPresentationModel presentation =
-                AuthenticationPresentationModel.Resolve(
-                    new AuthenticationPresentationInput
-                    {
-                        Status = status,
-                        Validation = validation,
-                        Endpoints = endpoints,
-                        IsChecking = checking,
-                        IsBusy = operationInProgress,
-                        HasValidationProvider = validationProvider != null,
-                        HasAcquisitionProvider = acquisitionProvider != null,
-                        HasAnyProvider = acquisitionProvider != null ||
-                                         validationProvider != null,
-                        HasInteractiveInputs =
-                            HasInteractiveInputs(descriptors),
-                        CredentialsExpanded =
-                            disclosures.CredentialsExpanded,
-                        ManualExpanded = disclosures.ManualToolsExpanded,
-                        RequiredAcquisitionValuesPresent =
-                            requiredValuesPresent,
-                        UtcNow = DateTimeOffset.UtcNow
-                    });
-
-            DeucarianEditorCards.DrawCard(
-                null,
-                () =>
-                {
-                    DrawConnectionOverview(
-                        target,
-                        presentation,
-                        endpoints,
-                        acquisitionProvider,
-                        interactiveProvider,
-                        descriptors);
-                    DrawInlineOperationMessage();
-
-                    DrawDivider();
-                    disclosures.ConnectionDetailsExpanded =
-                        DrawDisclosureHeader(
-                            disclosures.ConnectionDetailsExpanded,
-                            "Connection details",
-                            "Current server, routes, and verification");
-                    if (disclosures.ConnectionDetailsExpanded)
-                    {
-                        DrawConnectionDetails(
-                            target,
-                            endpoints,
-                            acquisitionProvider != null ||
-                            validationProvider != null,
-                            validationProvider,
-                            validation,
-                            checking);
-                    }
-
-                    DrawDivider();
-                    bool credentialsWereExpanded =
-                        disclosures.CredentialsExpanded;
-                    bool credentialsExpanded = DrawDisclosureHeader(
-                        disclosures.CredentialsExpanded,
-                        "Get a new token",
-                        acquisitionProvider == null
-                            ? "No authentication provider configured"
-                            : acquisitionProvider is
-                                AuthenticationEndpointProvider
-                                ? "Sign in through the configured endpoint"
-                                : "Use the configured authentication provider");
-                    if (credentialsExpanded != credentialsWereExpanded)
-                    {
-                        disclosures.SetCredentialsExpanded(
-                            credentialsExpanded);
-                        if (credentialsExpanded)
-                        {
-                            replacementToken = string.Empty;
-                        }
-                        else
-                        {
-                            interactiveInputs.ClearAll();
-                        }
-
-                        GUI.FocusControl(null);
-                    }
-
-                    if (disclosures.CredentialsExpanded)
-                    {
-                        DrawAcquisitionContent(
-                            target,
-                            acquisitionProvider,
-                            interactiveProvider,
-                            descriptors,
-                            presentation);
-                    }
-
-                    DrawDivider();
-                    bool manualWasExpanded =
-                        disclosures.ManualToolsExpanded;
-                    bool manualExpanded = DrawDisclosureHeader(
-                        disclosures.ManualToolsExpanded,
-                        "Replace token manually",
-                        "Advanced");
-                    if (manualExpanded != manualWasExpanded)
-                    {
-                        disclosures.SetManualToolsExpanded(manualExpanded);
-                        if (manualExpanded)
-                        {
-                            interactiveInputs.ClearAll();
-                        }
-                        else
-                        {
-                            replacementToken = string.Empty;
-                        }
-
-                        GUI.FocusControl(null);
-                    }
-
-                    if (disclosures.ManualToolsExpanded)
-                    {
-                        DrawManualToolsContent(target);
-                    }
-
-                    DrawDivider();
-                    AuthenticationLocalSettings settings =
-                        AuthenticationLocalSettings.instance;
-                    disclosures.LocalStorageExpanded =
-                        DrawDisclosureHeader(
-                            disclosures.LocalStorageExpanded,
-                            "Local storage",
-                            ResolveLocalStorageSummary(settings, target));
-                    if (disclosures.LocalStorageExpanded)
-                    {
-                        DrawLocalStorageContent(target);
-                    }
-                });
         }
     }
 }

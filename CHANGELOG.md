@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.4] - 2026-09-11
+
+- Use a native authentication page with retained non-sensitive state while preserving credential clearing, cancellation and existing authentication operations.
+- Require Editor 1.10.6 for the shared native controls, typography, responsive layouts and accessible interaction states.
+
 ## [1.0.3] - 2026-09-09
 
 - Register package tooling and navigation actions as shared Control Center pages. Preserve the domain workflow while using Editor-owned submenus, in-window navigation, and UI scaling.
