@@ -1,5 +1,7 @@
 # Deucarian Authentication
 
+For simple calls and setup, see [Simple usage](Documentation~/SimpleUsage.md).
+
 `com.deucarian.authentication` provides generic authentication sessions,
 acquisition and validation contracts, stable target registration, secure
 Editor persistence, and shared Editor UI. The generic core has no viewer or
