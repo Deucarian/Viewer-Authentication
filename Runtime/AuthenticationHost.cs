@@ -27,7 +27,7 @@ namespace Deucarian.Authentication
         }
         public AuthenticationStatusSnapshot Status => Session.Status;
         private IAuthenticationSession Session => !destroyed ? session ??
-            throw new InvalidOperationException("Configure the authentication host first.") : throw new ObjectDisposedException(nameof(AuthenticationHost));
+            throw new InvalidOperationException("AuthenticationHost '" + name + "' is not configured. Supply its session service and credential acquisition provider once during startup before signing in or out.") : throw new ObjectDisposedException(nameof(AuthenticationHost));
 
         public async Task<SessionResult> SignInAsync(CancellationToken cancellationToken = default)
         {
