@@ -24,9 +24,7 @@ namespace Deucarian.Authentication.Editor
                     AuthenticationEditorWindow.Open,
                     PackageId,
                     searchTerms: new[] { "authentication", "session", "sign in" },
-                    order: 100, createPage: () => DeucarianEditorImGuiPage.Create<AuthenticationWindow>(
-                        DeucarianToolIds.Authentication, window => window.OnGUI(),
-                        activate: (window, route) => window.OnFocus())));
+                    order: 100, createPage: AuthenticationWindow.CreatePage));
 
             CardRegistration = DeucarianControlCenterRegistry.RegisterCardProvider(
                 new AuthenticationCardProvider());

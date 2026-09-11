@@ -22,7 +22,8 @@ namespace Deucarian.Authentication.Editor
         private readonly AuthenticationDisclosureState disclosures =
             new AuthenticationDisclosureState();
 
-        private Vector2 scrollPosition;
+        private AuthenticationPage nativePage;
+        private DeucarianEditorPageSession pageSession;
         private string replacementToken = string.Empty;
         private string operationMessage = string.Empty;
         private bool operationFailed;
