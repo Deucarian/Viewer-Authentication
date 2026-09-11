@@ -14,6 +14,7 @@
     "Deucarian.Authentication.Editor"
   ],
   "sampleAssemblies": [
+    "Deucarian.Authentication.Samples.DefinitionWorkflow",
     "Deucarian.Authentication.Samples.SimpleUsage"
   ],
   "testAssemblies": [

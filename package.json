@@ -1,6 +1,6 @@
 {
   "name": "com.deucarian.authentication",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "displayName": "Deucarian Authentication",
   "description": "Reusable authentication composition, Edit Mode token acquisition, optional server validation, sanitized lifecycle commands, and local-only editor tooling.",
   "unity": "2021.3",
@@ -19,9 +19,9 @@
     "token"
   ],
   "dependencies": {
-    "com.deucarian.api": "2.0.1",
-    "com.deucarian.editor": "1.10.6",
-    "com.deucarian.session": "1.0.6",
+    "com.deucarian.api": "2.1.0",
+    "com.deucarian.editor": "1.12.0",
+    "com.deucarian.session": "1.1.0",
     "com.deucarian.session.api-integration": "1.2.0",
     "com.unity.nuget.newtonsoft-json": "3.2.2"
   },
@@ -30,6 +30,11 @@
       "displayName": "Simple Usage",
       "description": "Minimal calls through the configured package host.",
       "path": "Samples~/SimpleUsage"
+    },
+    {
+      "displayName": "Definition Workflow",
+      "description": "Playable scene with typed C# calls, Inspector components, editable definitions and shared host ownership.",
+      "path": "Samples~/DefinitionWorkflow"
     }
   ]
 }

@@ -1,0 +1,7 @@
+{
+  "name": "Deucarian.Authentication.Samples.DefinitionWorkflow",
+  "references": [
+    "Deucarian.Authentication",
+    "Deucarian.Session"
+  ]
+}
