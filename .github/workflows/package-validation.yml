@@ -1,6 +1,7 @@
 name: Package Validation
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -13,3 +14,5 @@ jobs:
     uses: Deucarian/Package-Registry/.github/workflows/deucarian-package-validation.yml@develop
     with:
       package-config: deucarian-package.json
+      # Registry #150 reviews the typed API dependency graph for this feature branch.
+      registry-ref: ${{ (github.head_ref == 'feature/simple-usage-apis' || github.ref_name == 'feature/simple-usage-apis') && '665a5a61f7fecc074499fda38d4f10d990539e5d' || 'develop' }}
