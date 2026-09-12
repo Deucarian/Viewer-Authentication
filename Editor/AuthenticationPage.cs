@@ -127,12 +127,20 @@ namespace Deucarian.Authentication.Editor
                 foreach (var descriptor in state.Inputs)
                 {
                     if (descriptor == null) continue;
+                    controller.RestoreUsername(state.Target, descriptor);
                     var field = form.Text("authentication-input-" + descriptor.Key, descriptor.DisplayName,
                         () => controller.ReadInput(descriptor.Key), value => { controller.WriteInput(descriptor.Key, value); Update(); });
                     field.isPasswordField = descriptor.IsSecret;
                     field.tooltip = descriptor.Description;
                     if (descriptor.IsSecret) secrets.Add(field);
+                    if (AuthenticationRememberedUsernames.IsUsername(descriptor) && state.Target.PersistenceIdentity != null)
+                    {
+                        var usernames = AuthenticationUsernamePreferences.instance;
+                        form.Toggle("authentication-remember-" + descriptor.Key, "Remember " + descriptor.DisplayName,
+                            () => usernames.Enabled(state.Target, descriptor), value => usernames.SetEnabled(state.Target, descriptor, value, controller.ReadInput(descriptor.Key)));
+                    }
                 }
+            form.Note(() => "Remembered usernames stay in this project's UserSettings and are scoped to this connection. Passwords are never saved.");
             acquire = Ui.Button(state.Target.Session.Status.HasAccessToken ? "Get new token" : "Sign in", () =>
             { controller.SignIn(state); ClearSensitiveFields(); Update(); }, true);
             acquire.name = "authentication-acquire";

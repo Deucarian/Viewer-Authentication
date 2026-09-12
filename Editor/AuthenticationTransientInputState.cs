@@ -20,6 +20,8 @@ namespace Deucarian.Authentication.Editor
                 : string.Empty;
         }
 
+        internal bool Contains(string key) => key != null && values.ContainsKey(key);
+
         internal void SetValue(string key, string value)
         {
             if (!string.IsNullOrWhiteSpace(key))

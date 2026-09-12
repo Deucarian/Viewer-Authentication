@@ -43,6 +43,14 @@ namespace Deucarian.Authentication.Editor
         }
 
         internal string ReadInput(string key) => interactiveInputs.GetValue(key);
+        internal void RestoreUsername(AuthenticationTarget target, AuthenticationInputDescriptor descriptor)
+        {
+            if (!interactiveInputs.Contains(descriptor.Key))
+            {
+                string remembered = AuthenticationUsernamePreferences.instance.Read(target, descriptor);
+                if (!string.IsNullOrEmpty(remembered)) interactiveInputs.SetValue(descriptor.Key, remembered);
+            }
+        }
         internal void WriteInput(string key, string value) => interactiveInputs.SetValue(key, value);
         internal void ExpandCredentials(bool expanded)
         {
