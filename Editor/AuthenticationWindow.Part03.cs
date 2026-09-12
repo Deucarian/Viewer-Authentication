@@ -18,6 +18,7 @@ namespace Deucarian.Authentication.Editor
         {
             if (interactiveProvider != null)
             {
+                AuthenticationUsernamePreferences.instance.Remember(target, descriptors, interactiveInputs);
                 AuthenticationInputValues inputValues =
                     interactiveInputs.CreateValues(descriptors);
                 interactiveInputs.ClearSecrets(descriptors);

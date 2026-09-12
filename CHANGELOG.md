@@ -1,5 +1,9 @@
 # Changelog
 
+## Asset workflow — Unreleased
+
+- Add optional project-local, connection-scoped remembered usernames while excluding passwords, tokens and non-identity inputs from this preference store.
+
 ## [1.1.0] - 2026-09-11
 
 - Add typed reusable definition authoring and/or scoped Inspector components that share the existing C# service behavior.

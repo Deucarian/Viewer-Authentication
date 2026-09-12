@@ -1,5 +1,9 @@
 # Deucarian Authentication
 
+## Asset selection and project defaults
+
+Sign-in offers Remember username/email for recognized, non-secret identity fields on persistently identified targets. This is opt-in, stored only in this project's UserSettings and scoped by service, environment, authority and client. Turn it off to forget the saved value. Passwords are never saved; reauthentication still requires the password. Refresh is available only when the registered provider/session actually supplies a refresh contract—no backend endpoints are inferred.
+
 ## Typed definition workflow
 
 A mock acquisition provider exercises the real authentication host and session. No backend or real credentials are used or displayed.
