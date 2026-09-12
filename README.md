@@ -4,6 +4,10 @@
 
 Sign-in offers Remember username/email for recognized, non-secret identity fields on persistently identified targets. This is opt-in, stored only in this project's UserSettings and scoped by service, environment, authority and client. Turn it off to forget the saved value. Passwords are never saved; reauthentication still requires the password. Refresh is available only when the registered provider/session actually supplies a refresh contract—no backend endpoints are inferred.
 
+Keep `/UserSettings/` and `/Library/` in the consumer project's `.gitignore`. These folder names do not themselves prevent tracking, and ignore rules do not remove already tracked files. Remembered usernames are plaintext local preferences; opt-in session tokens are encrypted under `Library/Deucarian/Authentication/Sessions`, never serialized into project assets. Do not commit either local directory.
+
+Remember username appears after all sign-in fields. Operation feedback is red on failure and green on success. Token endpoint failures explain known HTTP categories (including an absent endpoint, rejected credentials, throttling and server errors); unknown failures use a safe generic message. Raw backend bodies and exception details are deliberately not displayed because they can contain credentials or tokens.
+
 ## Typed definition workflow
 
 A mock acquisition provider exercises the real authentication host and session. No backend or real credentials are used or displayed.

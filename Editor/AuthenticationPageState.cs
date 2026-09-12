@@ -10,7 +10,7 @@ namespace Deucarian.Authentication.Editor
         internal AuthenticationEndpointTargetSummary Endpoints;
         internal AuthenticationAssessmentSnapshot Validation;
         internal IReadOnlyList<AuthenticationInputDescriptor> Inputs;
-        internal bool Busy, Checking, Credentials, Manual, HasProvider;
+        internal bool Busy, Checking, Credentials, Manual, HasProvider, Failed;
         internal int Generation;
         internal string Message, Verification;
     }

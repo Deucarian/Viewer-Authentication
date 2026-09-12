@@ -51,6 +51,9 @@ namespace Deucarian.Authentication.Editor
             replace?.SetEnabled(!state.Busy && !state.Checking && !string.IsNullOrWhiteSpace(controller.Replacement));
             clear?.SetEnabled(!state.Busy && !state.Checking && state.Target?.Session.Status.HasAccessToken == true);
             feedback.text = state.Message ?? string.Empty;
+            feedback.EnableInClassList("dw-muted", state.Busy);
+            feedback.EnableInClassList("dw-card-status--error", !state.Busy && state.Failed);
+            feedback.EnableInClassList("dw-card-status--success", !state.Busy && !state.Failed);
             Ui.Show(feedback, !string.IsNullOrEmpty(feedback.text));
             foreach (var form in forms) form.Refresh();
         }
@@ -80,7 +83,10 @@ namespace Deucarian.Authentication.Editor
             primary = Ui.Button("Sign in", () => { controller.InvokePagePrimary(state); Update(true); }, true);
             primary.name = "authentication-primary";
             summary.Actions.Add(primary);
-            feedback = Ui.Label(string.Empty, "dw-muted"); panel.Add(feedback);
+            feedback = Ui.Label(string.Empty, "dw-muted");
+            feedback.name = "authentication-feedback";
+            feedback.enableRichText = false;
+            panel.Add(feedback);
             panel.Add(Ui.Divider());
             var overview = Form(panel);
             overview.ReadOnly("authentication-session-state", "Session", () => state.Target?.Session.Status.Status.ToString() ?? "Not active");
@@ -133,6 +139,11 @@ namespace Deucarian.Authentication.Editor
                     field.isPasswordField = descriptor.IsSecret;
                     field.tooltip = descriptor.Description;
                     if (descriptor.IsSecret) secrets.Add(field);
+                }
+            if (state.Inputs != null)
+                foreach (var descriptor in state.Inputs)
+                {
+                    if (descriptor == null) continue;
                     if (AuthenticationRememberedUsernames.IsUsername(descriptor) && state.Target.PersistenceIdentity != null)
                     {
                         var usernames = AuthenticationUsernamePreferences.instance;
@@ -144,6 +155,7 @@ namespace Deucarian.Authentication.Editor
             acquire = Ui.Button(state.Target.Session.Status.HasAccessToken ? "Get new token" : "Sign in", () =>
             { controller.SignIn(state); ClearSensitiveFields(); Update(); }, true);
             acquire.name = "authentication-acquire";
+            content.Add(feedback);
             content.Add(Ui.EndActions(Ui.Button("Cancel", () => { controller.ExpandCredentials(false); Update(true); }), acquire));
         }
 
@@ -157,6 +169,7 @@ namespace Deucarian.Authentication.Editor
             secrets.Add(field);
             replace = Ui.Button("Replace token", () => { controller.Replace(state.Target); ClearSensitiveFields(); Update(); }, true);
             replace.name = "authentication-replace";
+            content.Add(feedback);
             content.Add(Ui.EndActions(Ui.Button("Cancel", () => { controller.ExpandManual(false); Update(true); }), replace));
         }
 

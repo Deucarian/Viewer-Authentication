@@ -5,6 +5,7 @@
     "Deucarian.API",
     "Deucarian.Editor",
     "Deucarian.Session",
+    "Deucarian.Session.APIIntegration",
     "Deucarian.Authentication"
   ],
   "includePlatforms": [
