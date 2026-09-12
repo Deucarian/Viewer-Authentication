@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0] - 2026-09-11
+
+- Add typed reusable definition authoring and/or scoped Inspector components that share the existing C# service behavior.
+- Include a playable Definition Workflow sample with configured hosts, short callers and usage documentation.
+- Align declared package dependencies with the definition-authoring development wave.
+
+
 ## [1.0.4] - 2026-09-11
 
 - Use a native authentication page with retained non-sensitive state while preserving credential clearing, cancellation and existing authentication operations.

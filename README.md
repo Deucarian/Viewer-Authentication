@@ -1,5 +1,15 @@
 # Deucarian Authentication
 
+## Typed definition workflow
+
+A mock acquisition provider exercises the real authentication host and session. No backend or real credentials are used or displayed.
+
+Start with the [Definition Workflow walkthrough](Documentation~/DefinitionWorkflow.md).
+Import **Definition Workflow** in Package Manager for a configured sample scene
+and short caller scripts. The sample keeps typed contracts and service setup explicit, with reusable
+components for scene callers.
+
+
 For simple calls and setup, see [Simple usage](Documentation~/SimpleUsage.md).
 
 `com.deucarian.authentication` provides generic authentication sessions,
