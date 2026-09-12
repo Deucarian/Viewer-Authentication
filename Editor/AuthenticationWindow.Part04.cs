@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Deucarian.Editor;
 using Deucarian.Session;
+using Deucarian.Session.APIIntegration;
 using UnityEditor;
 using UnityEngine;
 
@@ -135,8 +136,7 @@ namespace Deucarian.Authentication.Editor
                 if (result == null || result.IsFailure)
                 {
                     operationFailed = true;
-                    operationMessage =
-                        "The authentication operation failed. Check the configured endpoint and supplied values.";
+                    operationMessage = SessionTokenEndpointFailures.Describe(result?.Error?.Code);
                     return;
                 }
 

@@ -2,6 +2,9 @@
 
 ## Asset workflow — Unreleased
 
+- Place Remember username after all credential inputs; show red failure and green success feedback next to the active form, with sanitized actionable token-endpoint explanations.
+- Require Session API Integration 1.3.0 for shared HTTP failure classification and document local storage Git exclusions.
+
 - Add optional project-local, connection-scoped remembered usernames while excluding passwords, tokens and non-identity inputs from this preference store.
 
 ## [1.1.0] - 2026-09-11

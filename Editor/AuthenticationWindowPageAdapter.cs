@@ -12,6 +12,7 @@ namespace Deucarian.Authentication.Editor
             var target = index >= 0 ? targets[index] : null;
             var state = new AuthenticationPageState { Targets = targets, Target = target, Busy = operationInProgress,
                 Generation = contextGeneration, Credentials = disclosures.CredentialsExpanded, Manual = disclosures.ManualToolsExpanded,
+                Failed = operationFailed,
                 Message = operationInProgress ? "Authentication operation in progress…" : operationMessage };
             if (target == null) return state;
             PersistSelectedTargetIfNeeded(target);
