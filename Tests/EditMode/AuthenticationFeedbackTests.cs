@@ -33,6 +33,7 @@ namespace Deucarian.Authentication.Tests
                 {
                     AuthenticationLocalSettings.instance.SetSelectedTarget(id);
                     window = ScriptableObject.CreateInstance<AuthenticationWindow>();
+                    window.hideFlags = HideFlags.HideAndDontSave;
                     window.ExpandCredentials(true);
                     var root = new VisualElement();
                     root.style.flexGrow = 1;
@@ -43,6 +44,9 @@ namespace Deucarian.Authentication.Tests
                     using (var page = new AuthenticationPage(root, window))
                     {
                         for (int i = 0; i < 5; i++) yield return null;
+                        window.ExpandCredentials(true); page.Update(true);
+                        for (int i = 0; i < 5; i++) yield return null;
+                        Assert.IsTrue(window.CapturePage().Credentials, "The fixture must open credentials after editor initialization settles.");
                         var elements = root.Query<VisualElement>().ToList();
                         var username = root.Q<TextField>("authentication-input-username");
                         var password = root.Q<TextField>("authentication-input-password");
