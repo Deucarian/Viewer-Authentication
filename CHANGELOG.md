@@ -1,5 +1,24 @@
 # Changelog
 
+## Asset workflow — Unreleased
+
+- Place Remember username after all credential inputs; show red failure and green success feedback next to the active form, with sanitized actionable token-endpoint explanations.
+- Require Session API Integration 1.3.0 for shared HTTP failure classification and document local storage Git exclusions.
+
+- Add optional project-local, connection-scoped remembered usernames while excluding passwords, tokens and non-identity inputs from this preference store.
+
+## [1.1.0] - 2026-09-11
+
+- Add typed reusable definition authoring and/or scoped Inspector components that share the existing C# service behavior.
+- Include a playable Definition Workflow sample with configured hosts, short callers and usage documentation.
+- Align declared package dependencies with the definition-authoring development wave.
+
+
+## [1.0.4] - 2026-09-11
+
+- Use a native authentication page with retained non-sensitive state while preserving credential clearing, cancellation and existing authentication operations.
+- Require Editor 1.10.6 for the shared native controls, typography, responsive layouts and accessible interaction states.
+
 ## [1.0.3] - 2026-09-09
 
 - Register package tooling and navigation actions as shared Control Center pages. Preserve the domain workflow while using Editor-owned submenus, in-window navigation, and UI scaling.

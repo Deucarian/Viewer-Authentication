@@ -1,7 +1,7 @@
 {
   "packageId": "com.deucarian.authentication",
   "displayName": "Deucarian Authentication",
-  "samplePolicy": "tool",
+  "samplePolicy": "compiled-example",
   "operationalPackage": false,
   "ownedCapabilities": [
     "authentication"
@@ -13,7 +13,10 @@
   "editorAssemblies": [
     "Deucarian.Authentication.Editor"
   ],
-  "sampleAssemblies": [],
+  "sampleAssemblies": [
+    "Deucarian.Authentication.Samples.DefinitionWorkflow",
+    "Deucarian.Authentication.Samples.SimpleUsage"
+  ],
   "testAssemblies": [
     "Deucarian.Authentication.Tests.EditMode"
   ],
@@ -29,5 +32,5 @@
   ],
   "allowedDirectDebugCalls": [],
   "allowedDirectUnityObjectLifetimeCalls": [],
-  "expectedSamplesRoot": ""
+  "expectedSamplesRoot": "Samples~"
 }

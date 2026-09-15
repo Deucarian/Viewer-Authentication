@@ -131,7 +131,7 @@ namespace Deucarian.Authentication.Tests
             {
                 directory = Path.GetFullPath(Path.Combine(
                     "Temp",
-                    "AuthenticationRememberedIdentityTests",
+                    "AuthIdentityTests",
                     Guid.NewGuid().ToString("N")));
                 TargetId = "remembered-session-" +
                     Guid.NewGuid().ToString("N");

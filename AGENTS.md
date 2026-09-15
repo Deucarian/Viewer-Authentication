@@ -2,8 +2,7 @@
 
 Package ID: `com.deucarian.authentication`
 
-Follow the canonical Deucarian architecture and capability rules in Package
-Registry.
+Follow the canonical [Deucarian architecture](https://github.com/Deucarian/Package-Registry/blob/main/ARCHITECTURE.md) and capability rules in Package Registry.
 
 ## Ownership
 

@@ -1,0 +1,9 @@
+{
+  "name": "Deucarian.Authentication.Samples.SimpleUsage",
+  "references": [
+    "Deucarian.Authentication",
+    "Deucarian.Session"
+  ],
+  "autoReferenced": false,
+  "noEngineReferences": false
+}
